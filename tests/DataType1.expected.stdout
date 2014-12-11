@@ -1,0 +1,37 @@
+Scope errors:
+
+Definitions:
+  Definition 1:
+    data [4mInt[0m
+  Definition 2:
+    data [4mData[0m a = Con1 a | Con2 Int | Con3 a Int | Con4 (Data a) | Con5 (Data Int)
+  Definition 3:
+    data Data [4ma[0m = Con1 a | Con2 Int | Con3 a Int | Con4 (Data a) | Con5 (Data Int)
+  Definition 4:
+    data Data a = [4mCon1[0m a | Con2 Int | Con3 a Int | Con4 (Data a) | Con5 (Data Int)
+  Definition 5:
+    data Data a = Con1 a | [4mCon2[0m Int | Con3 a Int | Con4 (Data a) | Con5 (Data Int)
+  Definition 6:
+    data Data a = Con1 a | Con2 Int | [4mCon3[0m a Int | Con4 (Data a) | Con5 (Data Int)
+  Definition 7:
+    data Data a = Con1 a | Con2 Int | Con3 a Int | [4mCon4[0m (Data a) | Con5 (Data Int)
+  Definition 8:
+    data Data a = Con1 a | Con2 Int | Con3 a Int | Con4 (Data a) | [4mCon5[0m (Data Int)
+
+Use sites:
+  Definition used: 3
+    data Data a = Con1 [4ma[0m | Con2 Int | Con3 a Int | Con4 (Data a) | Con5 (Data Int)
+  Definition used: 1
+    data Data a = Con1 a | Con2 [4mInt[0m | Con3 a Int | Con4 (Data a) | Con5 (Data Int)
+  Definition used: 3
+    data Data a = Con1 a | Con2 Int | Con3 [4ma[0m Int | Con4 (Data a) | Con5 (Data Int)
+  Definition used: 1
+    data Data a = Con1 a | Con2 Int | Con3 a [4mInt[0m | Con4 (Data a) | Con5 (Data Int)
+  Definition used: 2
+    data Data a = Con1 a | Con2 Int | Con3 a Int | Con4 ([4mData[0m a) | Con5 (Data Int)
+  Definition used: 3
+    data Data a = Con1 a | Con2 Int | Con3 a Int | Con4 (Data [4ma[0m) | Con5 (Data Int)
+  Definition used: 2
+    data Data a = Con1 a | Con2 Int | Con3 a Int | Con4 (Data a) | Con5 ([4mData[0m Int)
+  Definition used: 1
+    data Data a = Con1 a | Con2 Int | Con3 a Int | Con4 (Data a) | Con5 (Data [4mInt[0m)

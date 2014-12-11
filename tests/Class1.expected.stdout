@@ -1,0 +1,19 @@
+Scope errors:
+
+Definitions:
+  Definition 1:
+    class [4mMyClass[0m a where
+  Definition 2:
+    class MyClass [4ma[0m where
+  Definition 3:
+      [4mmyClassMethod[0m :: a -> a
+  Definition 4:
+    [4mfn[0m = myClassMethod
+
+Use sites:
+  Definition used: 2
+      myClassMethod :: [4ma[0m -> a
+  Definition used: 2
+      myClassMethod :: a -> [4ma[0m
+  Definition used: 3
+    fn = [4mmyClassMethod[0m

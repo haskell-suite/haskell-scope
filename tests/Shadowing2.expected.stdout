@@ -1,0 +1,17 @@
+Scope errors:
+
+Definitions:
+  Definition 1:
+    [4my[0m = y
+  Definition 2:
+    [4mx[0m y = y
+  Definition 3:
+    x [4my[0m = y
+  Definition 4:
+        [4my[0m = 10
+
+Use sites:
+  Definition used: 1
+    y = [4my[0m
+  Definition used: 4
+    x y = [4my[0m
