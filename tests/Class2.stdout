@@ -1,0 +1,37 @@
+Scope errors:
+
+Definitions:
+  Definition 1:
+    data [4mString[0m
+  Definition 2:
+    data [4mList[0m a
+  Definition 3:
+    data List [4ma[0m
+  Definition 4:
+    class [4mShow[0m a where
+  Definition 5:
+    class Show [4ma[0m where
+  Definition 6:
+      [4mshow[0m :: a -> String
+  Definition 7:
+      [4mshowList[0m :: List a -> String
+  Definition 8:
+      showList [4mlst[0m = show lst
+
+Use sites:
+  Definition used: 5
+      show :: [4ma[0m -> String
+  Definition used: 1
+      show :: a -> [4mString[0m
+  Definition used: 2
+      showList :: [4mList[0m a -> String
+  Definition used: 5
+      showList :: List [4ma[0m -> String
+  Definition used: 1
+      showList :: List a -> [4mString[0m
+  Definition used: 7
+      [4mshowList[0m lst = show lst
+  Definition used: 6
+      showList lst = [4mshow[0m lst
+  Definition used: 8
+      showList lst = show [4mlst[0m

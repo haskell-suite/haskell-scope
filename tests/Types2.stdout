@@ -1,0 +1,55 @@
+Scope errors:
+
+Definitions:
+  Definition 1:
+    class [4mShow[0m
+  Definition 2:
+    [4mx[0m = x
+  Definition 3:
+    [4mx :: a[0m
+  Definition 4:
+    [4my[0m = y
+  Definition 5:
+    y :: forall [4ma[0m. a
+  Definition 6:
+    [4mz[0m = z
+  Definition 7:
+    [4mz :: Show a => a[0m
+  Definition 8:
+    [4mq[0m = q
+  Definition 9:
+    q :: forall [4ma[0m. Show a => a
+
+Use sites:
+  Definition used: 2
+    [4mx[0m :: a
+  Definition used: 3
+    x :: [4ma[0m
+  Definition used: 2
+    x = [4mx[0m
+  Definition used: 4
+    [4my[0m :: forall a. a
+  Definition used: 5
+    y :: forall a. [4ma[0m
+  Definition used: 4
+    y = [4my[0m
+  Definition used: 6
+    [4mz[0m :: Show a => a
+  Definition used: 1
+    z :: [4mShow[0m a => a
+  Definition used: 7
+    z :: Show [4ma[0m => a
+  Definition used: 7
+    z :: Show a => [4ma[0m
+  Definition used: 6
+    z = [4mz[0m
+  Definition used: 8
+    [4mq[0m :: forall a. Show a => a
+  Definition used: 1
+    q :: forall a. [4mShow[0m a => a
+  Definition used: 9
+    q :: forall a. Show [4ma[0m => a
+  Definition used: 9
+    q :: forall a. Show a => [4ma[0m
+  Definition used: 8
+    q = [4mq[0m

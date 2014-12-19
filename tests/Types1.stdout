@@ -1,0 +1,50 @@
+Scope errors:
+  ENotInScope (QualifiedName {gnameModule = "", gnameIdentifier = "Show"}) NsTypes (SrcSpanInfo {srcInfoSpan = SrcSpan "Types1.hs" 10 6 10 10, srcInfoPoints = []})
+
+Definitions:
+  Definition 1:
+    [4mx[0m = x
+  Definition 2:
+    [4mx :: a[0m
+  Definition 3:
+    [4my[0m = y
+  Definition 4:
+    y :: forall [4mb[0m. b
+  Definition 5:
+    [4mz[0m = z
+  Definition 6:
+    [4mz :: Show c => c[0m
+  Definition 7:
+    [4mf[0m = f
+  Definition 8:
+    [4mf :: a -> b[0m
+
+Use sites:
+  Definition used: 1
+    [4mx[0m :: a
+  Definition used: 2
+    x :: [4ma[0m
+  Definition used: 1
+    x = [4mx[0m
+  Definition used: 3
+    [4my[0m :: forall b. b
+  Definition used: 4
+    y :: forall b. [4mb[0m
+  Definition used: 3
+    y = [4my[0m
+  Definition used: 5
+    [4mz[0m :: Show c => c
+  Definition used: 6
+    z :: Show [4mc[0m => c
+  Definition used: 6
+    z :: Show c => [4mc[0m
+  Definition used: 5
+    z = [4mz[0m
+  Definition used: 7
+    [4mf[0m :: a -> b
+  Definition used: 8
+    f :: [4ma[0m -> b
+  Definition used: 8
+    f :: a -> [4mb[0m
+  Definition used: 7
+    f = [4mf[0m

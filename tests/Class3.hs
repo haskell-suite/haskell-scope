@@ -1,4 +1,4 @@
-module Class2 where
+module Class3 where
 
 data String
 data List a
@@ -7,4 +7,4 @@ class Show a where
   show :: a -> String
   showList :: List a -> String
 
-  showList lst = show lst
+  showList = show

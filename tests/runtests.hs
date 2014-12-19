@@ -40,17 +40,19 @@ unitTests =
   [ scopeTest "Basic" "Basic.hs"
   , scopeTest "Class1" "Class1.hs"
   , scopeTest "Class2" "Class2.hs"
+  , scopeTest "Class3" "Class3.hs"
   , scopeTest "Shadowing1" "Shadowing1.hs"
   , scopeTest "Shadowing2" "Shadowing2.hs"
   , scopeTest "Records1" "Records1.hs"
   , scopeTest "Records2" "Records2.hs"
   , scopeTest "DataType1" "DataType1.hs"
+  , scopeTest "Types1" "Types1.hs"
   , scopeTest "Error1" "Error1.hs"
   ]
 
 --scopeTest :: String -> FilePath -> Test
 scopeTest name testFile = testCase name $ do
-  expectedOutput <- readFile (replaceExtension testFile "expected.stdout") `mplus` return ""
+  expectedOutput <- readFile (replaceExtension testFile "stdout") `mplus` return ""
   output <- either id id `fmap` getScopeInfo testFile
   when (expectedOutput /= output) $ do
     fail "Diff Error"
@@ -70,15 +72,16 @@ getScopeInfo file = do
           getResolved (Origin (Resolved gname) loc) = [(loc, gname)]
           getResolved _ = []
           isDefinition (usageLoc, GlobalName definitionLoc _)= usageLoc == definitionLoc
-          (definitions, usage) = partition isDefinition allResolved
-          defIndex = zip (map fst definitions) [1..]
+          (_definitions, usage) = partition isDefinition allResolved
+          definitions = nub [ definitionLoc | (usageLoc, GlobalName definitionLoc _) <- allResolved ]
+          defIndex = zip definitions [1..]
       return $ Right $ unlines $
         [ "Scope errors:" ] ++
         [ "  " ++ show err | err <- errs ] ++
         [ "", "Definitions:" ] ++
         concat
         [ [ printf "  Definition %d:" (n::Int)
-          , show $ ppLocation 4 fileContent (fst def) ]
+          , show $ ppLocation 4 fileContent def ]
         | (n, def) <- zip [1..] definitions ] ++
         [ "", "Use sites:" ] ++
         concat
@@ -95,7 +98,7 @@ ppLocation padding file srcSpanInfo =
         let (before, line') = splitAt (beginColumn-1) line
             (highlight, after) = splitAt (endColumn-beginColumn) line'
         in [text before <> underline (text highlight) <> text after]
-      (line:rest) -> map text (line:rest)
+      (line:rest) -> map (underline . text) (line:rest)
   where
     relevantLines = take (endLine-beginLine+1) (drop (beginLine-1) (lines file))
     srcSpan = srcInfoSpan srcSpanInfo
