@@ -9,7 +9,7 @@ import           Language.Haskell.Scope
 import           System.Directory                (doesFileExist)
 import           System.Environment              (getArgs)
 import           System.Exit                     (ExitCode (..), exitWith)
-import           System.FilePath                 (replaceExtension)
+import           System.FilePath                 (replaceExtension, (<.>))
 import           System.IO                       (hPutStrLn, stderr)
 import           Test.Framework                  (defaultMain, testGroup)
 import           Test.Framework.Providers.HUnit
@@ -37,25 +37,32 @@ main = do
   defaultMain unitTests
 
 unitTests =
-  [ scopeTest "Basic" "Basic.hs"
-  , scopeTest "Class1" "Class1.hs"
-  , scopeTest "Class2" "Class2.hs"
-  , scopeTest "Class3" "Class3.hs"
-  , scopeTest "Instance1" "Instance1.hs"
-  , scopeTest "Instance2" "Instance2.hs"
-  , scopeTest "Instance3" "Instance3.hs"
-  , scopeTest "Instance4" "Instance4.hs"
-  , scopeTest "Shadowing1" "Shadowing1.hs"
-  , scopeTest "Shadowing2" "Shadowing2.hs"
-  , scopeTest "Records1" "Records1.hs"
-  , scopeTest "Records2" "Records2.hs"
-  , scopeTest "DataType1" "DataType1.hs"
-  , scopeTest "Types1" "Types1.hs"
-  , scopeTest "Error1" "Error1.hs"
+  [ scopeTest "Basic"
+  , scopeTest "Class1"
+  , scopeTest "Class2"
+  , scopeTest "Class3"
+  , scopeTest "Instance1"
+  , scopeTest "Instance2"
+  , scopeTest "Instance3"
+  , scopeTest "Instance4"
+  , scopeTest "Shadowing1"
+  , scopeTest "Shadowing2"
+  , scopeTest "Records1"
+  , scopeTest "Records2"
+  , scopeTest "DataType1"
+  , scopeTest "Types1"
+  , scopeTest "Where1"
+  , scopeTest "Where2"
+  , scopeTest "Where3"
+  , scopeTest "Where4"
+  , scopeTest "Where5"
+  , scopeTest "Where6"
+  , scopeTest "Error1"
   ]
 
 --scopeTest :: String -> FilePath -> Test
-scopeTest name testFile = testCase name $ do
+scopeTest name = testCase name $ do
+  let testFile = name <.> "hs"
   expectedOutput <- readFile (replaceExtension testFile "stdout") `mplus` return ""
   output <- either id id `fmap` getScopeInfo testFile
   when (expectedOutput /= output) $ do

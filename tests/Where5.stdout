@@ -1,0 +1,20 @@
+Scope errors:
+  ENotInScope (QualifiedName {gnameModule = "", gnameIdentifier = "b"}) NsValues (SrcSpanInfo {srcInfoSpan = SrcSpan "Where5.hs" 7 8 7 9, srcInfoPoints = []})
+
+Definitions:
+  Definition 1:
+    [4ma[0m x = b
+  Definition 2:
+    a [4mx[0m = b
+  Definition 3:
+      where [4mb[0m = b
+  Definition 4:
+    [4ma'[0m x = b
+  Definition 5:
+    a' [4mx[0m = b
+
+Use sites:
+  Definition used: 3
+    a x = [4mb[0m
+  Definition used: 3
+      where b = [4mb[0m

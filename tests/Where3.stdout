@@ -1,0 +1,21 @@
+Scope errors:
+
+Definitions:
+  Definition 1:
+    [4ma[0m = b
+  Definition 2:
+      where [4mb[0m = b
+  Definition 3:
+    [4ma'[0m = b
+  Definition 4:
+      where [4mb[0m = b
+
+Use sites:
+  Definition used: 2
+    a = [4mb[0m
+  Definition used: 2
+      where b = [4mb[0m
+  Definition used: 4
+    a' = [4mb[0m
+  Definition used: 4
+      where b = [4mb[0m

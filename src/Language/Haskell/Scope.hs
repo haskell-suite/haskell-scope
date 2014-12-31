@@ -601,7 +601,8 @@ resolveBinds :: Resolve Binds
 resolveBinds binds =
     case binds of
         BDecls src decls ->
-            BDecls (Origin None src) <$> mapM (resolveDecl ResolveToplevel) decls
+            BDecls (Origin None src)
+                <$> mapM (resolveDecl ResolveToplevel) decls
         _ -> error "Language.Haskell.Scope.resolveBinds: undefined"
 
 resolveAlt :: Resolve Alt
@@ -745,9 +746,10 @@ resolveDecl rContext decl =
                 <$> mapM resolveMatch matches
 
         -- FIXME: PatBind in classes and instances
-        PatBind src pat rhs binds ->
-            PatBind (Origin None src)
-                <$> resolvePat pat
+        PatBind src pat rhs binds -> do
+            pat' <- resolvePat pat
+            limitScope $ PatBind (Origin None src)
+                <$> pure pat'
                 <*> resolveRhs rhs
                 <*> resolveMaybe resolveBinds binds
 
