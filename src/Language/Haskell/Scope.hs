@@ -419,9 +419,22 @@ resolveDeclHead dhead =
         DHInfix{} -> error "resolveDeclHead"
         DHParen _ next -> resolveDeclHead next
 
+resolveAsst :: Resolve Asst
+resolveAsst asst =
+    case asst of
+        ClassA src qname tys ->
+            ClassA (Origin None src)
+                <$> resolveQName NsTypes qname
+                <*> mapM resolveType tys
+        _ -> error "resolveAsst"
+
 resolveContext :: Resolve Context
 resolveContext ctx =
     case ctx of
+        CxSingle src asst ->
+            CxSingle (Origin None src)
+                <$> resolveAsst asst
+        CxEmpty src -> pure (CxEmpty (Origin None src))
         _ -> error "resolveContext"
 
 resolveOverlap :: Resolve Overlap
@@ -435,11 +448,17 @@ resolveDataOrNew = pure . fmap (Origin None)
 resolveInstHead :: Resolve InstHead
 resolveInstHead instHead =
     case instHead of
-        -- IHead src className tys ->
-        --     IHead (Origin None src)
-        --         <$> resolveQName NsTypes className
-        --         <*> mapM resolveType tys
-        IHInfix{} -> error "resolveInstHead"
+        IHCon src qname ->
+            IHCon (Origin None src)
+                <$> resolveQName NsTypes qname
+        IHInfix src ty qname ->
+            IHInfix (Origin None src)
+                <$> resolveType ty
+                <*> resolveQName NsTypes qname
+        IHApp src subHead ty ->
+            IHApp (Origin None src)
+                <$> resolveInstHead subHead
+                <*> resolveType ty
         IHParen src sub ->
             IHParen (Origin None src)
                 <$> resolveInstHead sub
@@ -447,7 +466,15 @@ resolveInstHead instHead =
 resolveInstRule :: Resolve InstRule
 resolveInstRule instRule =
     case instRule of
-        _ -> error "resolveInstRule"
+        IRule src mbTyVarBinds mbContext iHead ->
+            withTvRoot src $
+            IRule (Origin None src)
+                <$> resolveMaybe (mapM resolveTyVarBind) mbTyVarBinds
+                <*> resolveMaybe resolveContext mbContext
+                <*> resolveInstHead iHead
+        IParen src subRule ->
+            IParen (Origin None src) <$> resolveInstRule subRule
+        -- _ -> error "resolveInstRule"
 
 resolveDeriving :: Resolve Deriving
 resolveDeriving (Deriving src instRules) =
@@ -488,6 +515,12 @@ resolveType ty =
         TyTuple src boxed tys ->
             TyTuple (Origin None src) boxed
                 <$> mapM resolveType tys
+        TyForall src mbTyVarBinds mbCtx ty -> limitTyVarScope $
+            TyForall (Origin None src)
+                <$> resolveMaybe (mapM resolveTyVarBind) mbTyVarBinds
+                <*> resolveMaybe resolveContext mbCtx
+                <*> resolveType ty
+
         _ -> error $ "resolveType: " ++ show ty
 
 resolveBangType :: Resolve BangType
@@ -733,14 +766,14 @@ resolveDecl rContext decl =
                 TypeSig (Origin None src)
                     <$> mapM (defineName NsValues) names
                     <*> resolveType ty
-        ClassDecl src ctx dhead deps decls ->
+        ClassDecl src ctx dhead deps decls -> limitTyVarScope $
             ClassDecl (Origin None src)
                 <$> resolveMaybe resolveContext ctx
                 <*> resolveDeclHead dhead
                 <*> mapM resolveFunDep deps
                 <*> resolveMaybe (mapM resolveClassDecl) decls
 
-        InstDecl src mbOverlap instRule decls ->
+        InstDecl src mbOverlap instRule decls -> limitTyVarScope $
             InstDecl (Origin None src)
                 <$> resolveMaybe resolveOverlap mbOverlap
                 <*> resolveInstRule instRule
