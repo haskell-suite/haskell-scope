@@ -1,0 +1,17 @@
+Scope errors:
+
+Definitions:
+  Definition 1:
+    [4ma[0m + b = b + a
+  Definition 2:
+    a [4m+[0m b = b + a
+  Definition 3:
+    a + [4mb[0m = b + a
+
+Use sites:
+  Definition used: 3
+    a + b = [4mb[0m + a
+  Definition used: 2
+    a + b = b [4m+[0m a
+  Definition used: 1
+    a + b = b + [4ma[0m

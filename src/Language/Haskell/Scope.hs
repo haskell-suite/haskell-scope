@@ -695,7 +695,16 @@ resolveMatch match =
                     <*> pure pats
                     <*> resolveRhs rhs
                     <*> resolveMaybe resolveBinds mbBinds
-        _ -> error "resolveMatch"
+        InfixMatch src leftPat name rightPats rhs mbBinds -> limitScope $ do
+            leftPat' <- resolvePat leftPat
+            rightPats' <- mapM resolvePat rightPats
+            limitScope $
+                InfixMatch (Origin None src)
+                    <$> pure leftPat'
+                    <*> resolveName NsValues name
+                    <*> pure rightPats'
+                    <*> resolveRhs rhs
+                    <*> resolveMaybe resolveBinds mbBinds
 
 resolveClassDecl :: Resolve ClassDecl
 resolveClassDecl decl =
