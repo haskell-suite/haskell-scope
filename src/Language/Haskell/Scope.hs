@@ -674,6 +674,10 @@ resolveExp expr =
         Tuple src boxed exps ->
             Tuple (Origin None src) boxed
                 <$> mapM resolveExp exps
+        Let src binds expr -> limitScope $
+            Let (Origin None src)
+                <$> resolveBinds binds
+                <*> resolveExp expr
         _ -> error $ "resolveExp: " ++ show expr
 
 resolveRhs :: Resolve Rhs
