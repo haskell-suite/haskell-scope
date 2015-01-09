@@ -58,6 +58,7 @@ unitTests =
   , scopeTest "Where5"
   , scopeTest "Where6"
   , scopeTest "Infix1"
+  , scopeTest "BuiltIn1"
   , scopeTest "Error1"
   ]
 

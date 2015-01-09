@@ -520,7 +520,9 @@ resolveType ty =
                 <$> resolveMaybe (mapM resolveTyVarBind) mbTyVarBinds
                 <*> resolveMaybe resolveContext mbCtx
                 <*> resolveType ty
-
+        TyList src ty ->
+            TyList (Origin None src)
+                <$> resolveType ty
         _ -> error $ "resolveType: " ++ show ty
 
 resolveBangType :: Resolve BangType
@@ -587,6 +589,9 @@ resolvePat pat =
             PLit (Origin None src)
                 <$> resolveSign sign
                 <*> resolveLiteral lit
+        PList src pats ->
+            PList (Origin None src)
+                <$> mapM resolvePat pats
         _ -> error $ "resolvePat: " ++ show pat
 
 -- resolveGuardedAlts :: Resolve GuardedAlts
@@ -678,6 +683,9 @@ resolveExp expr =
             Let (Origin None src)
                 <$> resolveBinds binds
                 <*> resolveExp expr
+        List src exprs ->
+            List (Origin None src)
+                <$> mapM resolveExp exprs
         _ -> error $ "resolveExp: " ++ show expr
 
 resolveRhs :: Resolve Rhs
