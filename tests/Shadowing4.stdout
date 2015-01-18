@@ -1,0 +1,15 @@
+Scope errors:
+
+Definitions:
+  Definition 1:
+    [4mx[0m = case x of
+  Definition 2:
+          [4mx[0m -> x
+  Definition 3:
+              [4mx[0m = 10
+
+Use sites:
+  Definition used: 2
+    x = case [4mx[0m of
+  Definition used: 3
+          x -> [4mx[0m

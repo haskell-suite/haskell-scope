@@ -611,11 +611,12 @@ resolveBinds binds =
         _ -> error "Language.Haskell.Scope.resolveBinds: undefined"
 
 resolveAlt :: Resolve Alt
-resolveAlt (Alt src pat rhs mbBinds) = limitScope $
-    Alt (Origin None src)
-        <$> resolvePat pat
-        <*> resolveRhs rhs
-        <*> resolveMaybe resolveBinds mbBinds
+resolveAlt (Alt src pat rhs mbBinds) = do
+    pat' <- resolvePat pat
+    limitScope $
+        Alt (Origin None src) pat'
+            <$> resolveRhs rhs
+            <*> resolveMaybe resolveBinds mbBinds
 
 resolveQOp :: Resolve QOp
 resolveQOp qop =
@@ -699,24 +700,23 @@ resolveRhs rhs =
 resolveMatch :: Resolve Match
 resolveMatch match =
     case match of
-        Match src name pats rhs mbBinds -> limitScope $ do
-            pats <- mapM resolvePat pats
-            limitScope $
-                Match (Origin None src)
-                    <$> resolveName NsValues name
-                    <*> pure pats
-                    <*> resolveRhs rhs
-                    <*> resolveMaybe resolveBinds mbBinds
-        InfixMatch src leftPat name rightPats rhs mbBinds -> limitScope $ do
-            leftPat' <- resolvePat leftPat
-            rightPats' <- mapM resolvePat rightPats
-            limitScope $
-                InfixMatch (Origin None src)
-                    <$> pure leftPat'
-                    <*> resolveName NsValues name
-                    <*> pure rightPats'
-                    <*> resolveRhs rhs
-                    <*> resolveMaybe resolveBinds mbBinds
+        Match src name pats rhs mbBinds -> do
+            name' <- resolveName NsValues name
+            limitScope $ do
+                pats <- mapM resolvePat pats
+                limitScope $
+                    Match (Origin None src) name' pats
+                        <$> resolveRhs rhs
+                        <*> resolveMaybe resolveBinds mbBinds
+        InfixMatch src leftPat name rightPats rhs mbBinds -> do
+            name' <- resolveName NsValues name
+            limitScope $ do
+                leftPat' <- resolvePat leftPat
+                rightPats' <- mapM resolvePat rightPats
+                limitScope $
+                    InfixMatch (Origin None src) leftPat' name' rightPats'
+                        <$> resolveRhs rhs
+                        <*> resolveMaybe resolveBinds mbBinds
 
 resolveClassDecl :: Resolve ClassDecl
 resolveClassDecl decl =

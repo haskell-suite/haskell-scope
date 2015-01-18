@@ -47,6 +47,8 @@ unitTests =
   , scopeTest "Instance4"
   , scopeTest "Shadowing1"
   , scopeTest "Shadowing2"
+  , scopeTest "Shadowing3"
+  , scopeTest "Shadowing4"
   , scopeTest "Records1"
   , scopeTest "Records2"
   , scopeTest "DataType1"
