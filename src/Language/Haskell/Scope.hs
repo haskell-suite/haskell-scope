@@ -611,7 +611,7 @@ resolveBinds binds =
         _ -> error "Language.Haskell.Scope.resolveBinds: undefined"
 
 resolveAlt :: Resolve Alt
-resolveAlt (Alt src pat rhs mbBinds) = do
+resolveAlt (Alt src pat rhs mbBinds) = limitScope $ do
     pat' <- resolvePat pat
     limitScope $
         Alt (Origin None src) pat'
