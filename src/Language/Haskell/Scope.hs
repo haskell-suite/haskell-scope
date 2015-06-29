@@ -52,7 +52,9 @@ module Language.Haskell.Scope
 import           Control.Applicative
 import           Control.Monad.Identity
 import           Control.Monad.Reader
-import           Control.Monad.Writer
+import           Control.Monad.Writer                   (MonadWriter, Writer,
+                                                         WriterT(..), runWriter,
+                                                         tell)
 import           Data.Map                               (Map)
 import qualified Data.Map                               as Map
 import           Data.Maybe
@@ -307,6 +309,7 @@ resolveName'' mbDefault qualification ns name =
             Ident a b  -> (Ident, a, b)
             Symbol a b -> (Symbol, a, b)
     qname = QualifiedName qualification nameString
+    worker :: (Scope -> Map QualifiedName [ScopedName]) -> Rename Origin
     worker field = do
         m <- asks (field . snd)
         let ret = case Map.lookup qname m of
