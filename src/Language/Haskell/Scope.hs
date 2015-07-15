@@ -53,11 +53,12 @@ import           Control.Applicative
 import           Control.Monad.Identity
 import           Control.Monad.Reader
 import           Control.Monad.Writer                   (MonadWriter, Writer,
-                                                         WriterT(..), runWriter,
-                                                         tell)
+                                                         WriterT (..),
+                                                         runWriter, tell)
 import           Data.Map                               (Map)
 import qualified Data.Map                               as Map
 import           Data.Maybe
+import           Data.Monoid                            (Monoid (..))
 import           Language.Haskell.Exts.Annotated.Syntax
 import           Language.Haskell.Exts.SrcLoc
 
@@ -142,9 +143,14 @@ globalNameSrcSpanInfo (GlobalName src _) = src
 globalNameIdentifier :: GlobalName -> String
 globalNameIdentifier (GlobalName _ (QualifiedName _mod ident)) = ident
 
+-- data Fixity = Fixity Assoc (Maybe Precedence) GlobalName
+-- data Assoc = AssocNone | AssocLeft | AssocRight
+-- type Precedence = Int
+
 data Interface =
     Interface
     { ifaceValues       :: [GlobalName]
+    -- , ifaceFixities     :: [Fixity]
     , ifaceTypes        :: [(GlobalName, [GlobalName])]
     , ifaceConstructors :: [(GlobalName, [GlobalName])]
     , ifaceClasses      :: [(GlobalName, [GlobalName])]
@@ -205,7 +211,7 @@ instance Monoid Scope where
         , scopeValues     = Map.unionWithKey check (scopeValues a) (scopeValues b)
         , scopeErrors     = scopeErrors a ++ scopeErrors b }
       where
-        check k a b = a ++ b
+        check _k a' b' = a' ++ b'
 
 -- Join two scopes, names in the first scope will shadow names in the second.
 shadowJoin :: Scope -> Scope -> Scope
@@ -595,6 +601,11 @@ resolvePat pat =
         PList src pats ->
             PList (Origin None src)
                 <$> mapM resolvePat pats
+        PInfixApp src a con b ->
+            PInfixApp (Origin None src)
+                <$> resolvePat a
+                <*> resolveQName NsValues con
+                <*> resolvePat b
         _ -> error $ "resolvePat: " ++ show pat
 
 -- resolveGuardedAlts :: Resolve GuardedAlts
@@ -748,6 +759,19 @@ resolveActivation activation = pure $
         ActiveFrom src n -> ActiveFrom (Origin None src) n
         ActiveUntil src n -> ActiveUntil (Origin None src) n
 
+resolveAssoc :: Resolve Assoc
+resolveAssoc assoc = pure $
+    case assoc of
+        AssocNone src -> AssocNone (Origin None src)
+        AssocLeft src -> AssocLeft (Origin None src)
+        AssocRight src -> AssocRight (Origin None src)
+
+resolveOp :: Resolve Op
+resolveOp op =
+    case op of
+        VarOp src name -> VarOp (Origin None src) <$> resolveName NsValues name
+        ConOp src name -> ConOp (Origin None src) <$> resolveName NsValues name
+
 resolveDecl :: ResolveContext -> Resolve Decl
 resolveDecl rContext decl =
     case decl of
@@ -824,6 +848,12 @@ resolveDecl rContext decl =
             TypeDecl (Origin None src)
                 <$> resolveDeclHead dhead
                 <*> resolveType ty
+
+        InfixDecl src assoc precedence ops ->
+            InfixDecl (Origin None src)
+                <$> resolveAssoc assoc
+                <*> pure precedence
+                <*> mapM resolveOp ops
 
         _ -> error $ "resolveDecl: " ++ show decl
 
