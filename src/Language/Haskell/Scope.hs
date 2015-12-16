@@ -659,6 +659,19 @@ resolveLiteral lit = pure $
     worker con src =
         con (Origin None src)
 
+-- XXX: Support debindable syntax.
+resolveStmt :: Resolve Stmt
+resolveStmt stmt = do
+    case stmt of
+        Generator src pat expr ->
+            Generator (Origin None src)
+                <$> resolvePat pat
+                <*> limitScope (resolveExp expr)
+        Qualifier src expr ->
+            Qualifier (Origin None src)
+                <$> limitScope (resolveExp expr)
+        _ -> error $ "resolveStmt: " ++ show stmt
+
 resolveExp :: Resolve Exp
 resolveExp expr =
     case expr of
@@ -701,6 +714,9 @@ resolveExp expr =
         List src exprs ->
             List (Origin None src)
                 <$> mapM resolveExp exprs
+        Do src stmts ->
+            Do (Origin None src)
+                <$> mapM resolveStmt stmts
         _ -> error $ "resolveExp: " ++ show expr
 
 resolveRhs :: Resolve Rhs
@@ -960,4 +976,3 @@ resolveModule m =
                 <*> mapM resolveImportDecl imports
                 <*> mapM (resolveDecl ResolveToplevel) decls
         _ -> error "resolveModule"
-
