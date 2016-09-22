@@ -59,7 +59,7 @@ import           Data.Map                               (Map)
 import qualified Data.Map                               as Map
 import           Data.Maybe
 import           Data.Monoid                            (Monoid (..))
-import           Language.Haskell.Exts.Annotated.Syntax
+import           Language.Haskell.Exts.Syntax
 import           Language.Haskell.Exts.SrcLoc
 
 -- ModuleName -> Interface
@@ -86,19 +86,19 @@ deriveInterface m =
             Interface
             { ifaceValues =
                 [ gname
-                | EVar _ _ns qname <- exports
+                | EVar _ qname <- exports
                 , Origin (Resolved gname) _ <- [ann qname] ] ++
                 [ gname
-                | EThingWith _ _qname cnames <- exports
+                | EThingWith _ _wild _qname cnames <- exports
                 , ConName _ name <- cnames
                 , Origin (Resolved gname) _ <- [ann name] ]
 
             , ifaceTypes =
                 [ (gname, [])
-                | EAbs _ qname <- exports
+                | EAbs _ _ns qname <- exports
                 , Origin (Resolved gname) _ <- [ann qname] ] ++
                 [ (gname, [])
-                | EThingWith _ qname _cnames <- exports
+                | EThingWith _ _wild qname _cnames <- exports
                 , Origin (Resolved gname) _ <- [ann qname] ]
             , ifaceConstructors = []
             , ifaceClasses = []
@@ -534,13 +534,13 @@ resolveType ty =
                 <$> resolveType ty
         _ -> error $ "resolveType: " ++ show ty
 
-resolveBangType :: Resolve BangType
-resolveBangType bangTy =
-    case bangTy of
-        BangedTy src ->
-            pure $ BangedTy (Origin None src)
-        UnpackedTy src ->
-            pure $ UnpackedTy (Origin None src)
+-- resolveBangType :: Resolve BangType
+-- resolveBangType bangTy =
+--     case bangTy of
+--         BangedTy src ->
+--             pure $ BangedTy (Origin None src)
+--         UnpackedTy src ->
+--             pure $ UnpackedTy (Origin None src)
 
 resolveFieldDecl :: Resolve FieldDecl
 resolveFieldDecl fieldDecl =
@@ -893,18 +893,25 @@ resolveCName cname =
             ConName (Origin None src)
                 <$> resolveName NsValues name
 
+resolveEWildcard :: Resolve EWildcard
+resolveEWildcard wildcard =
+  case wildcard of
+    NoWildcard src -> pure $ NoWildcard (Origin None src)
+    EWildcard src n -> pure $ EWildcard (Origin None src) n
+
 resolveExportSpec :: Resolve ExportSpec
 resolveExportSpec spec =
     case spec of
-        EAbs src qname ->
-            EAbs (Origin None src) <$> resolveQName NsTypes qname
-        EVar src ns qname ->
+        EAbs src ns qname ->
+            EAbs (Origin None src) <$> resolveNamespace ns <*> resolveQName NsTypes qname
+        EVar src qname ->
             EVar (Origin None src)
-                <$> resolveNamespace ns
-                <*> resolveQName NsValues qname
-        EThingWith src qname cnames ->
+                -- <$> resolveNamespace ns
+                <$> resolveQName NsValues qname
+        EThingWith src wild qname cnames ->
             EThingWith (Origin None src)
-                <$> resolveQName NsTypes qname
+                <$> resolveEWildcard wild
+                <*> resolveQName NsTypes qname
                 <*> mapM resolveCName cnames
         _ -> error $ "resolveExportSpec: " ++ show spec
 
@@ -935,10 +942,9 @@ resolveModulePragma pragma =
 resolveImportSpec :: Resolve ImportSpec
 resolveImportSpec spec =
     case spec of
-        IVar src ns name ->
+        IVar src name ->
             IVar (Origin None src)
-                <$> resolveNamespace ns
-                <*> resolveName NsValues name
+                <$> resolveName NsValues name
         _ -> error "Language.Haskell.Scope.resolveImportSpec"
 
 resolveImportSpecList :: Resolve ImportSpecList
