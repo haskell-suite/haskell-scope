@@ -4,8 +4,8 @@ import           Control.Monad                   (fmap, mplus, when)
 import           Data.Foldable                   (foldMap)
 import           Data.List                       (nub, partition)
 import           Data.Maybe                      (fromMaybe)
-import           Language.Haskell.Exts.Annotated
-import           Language.Haskell.Scope
+import           Language.Haskell.Exts
+import           Language.Haskell.Scope.Resolve
 import           System.Directory                (doesFileExist)
 import           System.Environment              (getArgs)
 import           System.Exit                     (ExitCode (..), exitWith)
@@ -86,23 +86,23 @@ getScopeInfo file = do
           allResolved = nub $ foldMap getResolved scoped
           getResolved (Origin (Resolved gname) loc) = [(loc, gname)]
           getResolved _ = []
-          isDefinition (usageLoc, GlobalName definitionLoc _)= usageLoc == definitionLoc
-          (_definitions, usage) = partition isDefinition allResolved
-          definitions = nub [ definitionLoc | (usageLoc, GlobalName definitionLoc _) <- allResolved ]
-          defIndex = zip definitions [1..]
+          bindings = nub $ foldMap getBinding scoped
+          getBinding (Origin (Binding gname) loc) = [(loc, gname)]
+          getBinding _ = []
+          defIndex = zip (map snd bindings) [1..]
       return $ Right $ unlines $
         [ "Scope errors:" ] ++
         [ "  " ++ show err | err <- errs ] ++
         [ "", "Definitions:" ] ++
         concat
         [ [ printf "  Definition %d:" (n::Int)
-          , show $ ppLocation 4 fileContent def ]
-        | (n, def) <- zip [1..] definitions ] ++
+          , show $ ppLocation 4 fileContent loc ]
+        | (loc, n) <- zip (map fst bindings) [1..] ] ++
         [ "", "Use sites:" ] ++
         concat
-        [ [ printf "  Definition used: %d" (fromMaybe 0 (lookup definitionLoc defIndex) :: Int)
+        [ [ printf "  Definition used: %d" (fromMaybe 0 (lookup gname defIndex) :: Int)
           , show $ ppLocation 4 fileContent usageLoc ]
-        | (usageLoc, GlobalName definitionLoc _) <- usage ]
+        | (usageLoc, gname) <- allResolved ]
 
 ppLocation :: Int -> String -> SrcSpanInfo -> Doc
 ppLocation padding file srcSpanInfo =
