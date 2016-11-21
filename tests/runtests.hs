@@ -1,22 +1,21 @@
 module Main (main) where
 
-import           Control.Monad                   (fmap, mplus, when)
-import           Data.Foldable                   (foldMap)
-import           Data.List                       (nub, partition, intercalate)
-import           Data.Maybe                      (fromMaybe)
-import           Language.Haskell.Exts
+import           Control.Monad                  (fmap, mplus, when)
+import           Data.Foldable                  (foldMap)
+import           Data.List                      (intercalate, nub)
+import           Language.Haskell.Exts          (ParseResult (..), SrcSpan (..),
+                                                 SrcSpanInfo (..), parseFile)
 import           Language.Haskell.Scope.Resolve
-import           System.Directory                (doesFileExist)
-import           System.Environment              (getArgs)
-import           System.Exit                     (ExitCode (..), exitWith)
-import           System.FilePath                 (replaceExtension, (<.>))
-import           System.IO                       (hPutStrLn, stderr)
-import           Test.Framework                  (defaultMain, testGroup)
+import           System.Directory               (doesFileExist)
+import           System.Environment             (getArgs)
+import           System.Exit                    (exitSuccess, exitFailure)
+import           System.FilePath                (replaceExtension, (<.>))
+import           System.IO                      (hPutStrLn, stderr)
+import           Test.Framework                 (Test, defaultMain, testGroup)
 import           Test.Framework.Providers.HUnit
-import           Test.HUnit
-import           Text.PrettyPrint.ANSI.Leijen    (Doc, indent, text, underline,
-                                                  vsep, (<>))
-import           Text.Printf                     (printf)
+import           Text.PrettyPrint.ANSI.Leijen   (Doc, indent, text, underline,
+                                                 vsep, (<>))
+import           Text.Printf                    (printf)
 
 main :: IO ()
 main = do
@@ -29,13 +28,14 @@ main = do
         case info of
           Left err -> do
             hPutStrLn stderr err
-            exitWith (ExitFailure 1)
+            exitFailure
           Right msg -> do
             putStr msg
-            exitWith ExitSuccess
+            exitSuccess
     _ -> return ()
   defaultMain unitTests
 
+unitTests :: [Test]
 unitTests =
   [ scopeTest "Basic"
   , scopeTest "Class1"
@@ -44,14 +44,12 @@ unitTests =
   , scopeTest "Instance1"
   , scopeTest "Instance2"
   , scopeTest "Instance3"
-  , scopeTest "Instance4"
+
   , scopeTest "Shadowing1"
   , scopeTest "Shadowing2"
   , scopeTest "Shadowing3"
   , scopeTest "Shadowing4"
   , scopeTest "Shadowing5"
-  , scopeTest "Records1"
-  , scopeTest "Records2"
   , scopeTest "DataType1"
   , scopeTest "Types1"
   , scopeTest "Where1"
@@ -62,35 +60,39 @@ unitTests =
   , scopeTest "Where6"
   , scopeTest "Infix1"
   , scopeTest "BuiltIn1"
-  , scopeTest "Error1"
+  , testGroup "Known issues"
+    [ scopeTest "Error1"
+    , scopeTest "Instance4"
+    , scopeTest "Records1"
+    , scopeTest "Records2" ]
   ]
 
---scopeTest :: String -> FilePath -> Test
+scopeTest :: String -> Test
 scopeTest name = testCase name $ do
   let testFile = name <.> "hs"
   expectedOutput <- readFile (replaceExtension testFile "stdout") `mplus` return ""
   output <- either id id `fmap` getScopeInfo testFile
-  when (expectedOutput /= output) $ do
-    fail "Diff Error"
+  let isFailure = expectedOutput /= output
+  when isFailure $ fail "Diff Error"
 
 getScopeInfo :: FilePath -> IO (Either String String)
 getScopeInfo file = do
   fileContent <- readFile file
   parsed <- parseFile file
   case parsed of
-    ParseFailed position msg -> do
+    ParseFailed position msg ->
       return $ Left $
         show position ++ "\n" ++
         msg
     ParseOk thisModule -> do
-      let (env, errs, scoped) = resolve emptyResolveEnv thisModule
+      let (_env, errs, scoped) = resolve emptyResolveEnv thisModule
           allResolved = nub $ foldMap getResolved scoped
           getResolved (Origin (Resolved gname) loc) = [(loc, gname)]
           getResolved _ = []
           bindings = nub $ foldMap getBinding scoped
           getBinding (Origin (Binding gname) loc) = [(loc, gname)]
           getBinding _ = []
-          defIndex = zip (map snd bindings) [1..]
+          defIndex = zip (map snd bindings) [1::Int ..]
       return $ Right $ unlines $
         [ "Scope errors:" ] ++
         [ "  " ++ show (ppScopeError err) ++ "\n" ++
