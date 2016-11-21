@@ -1,0 +1,43 @@
+Scope errors:
+
+Definitions:
+  Definition 1:
+    data [4mString[0m
+  Definition 2:
+    data [4mList[0m a
+  Definition 3:
+    data List [4ma[0m
+  Definition 4:
+    class [4mShow[0m a where
+  Definition 5:
+    class Show [4ma[0m where
+  Definition 6:
+      [4mshow[0m :: a -> String
+  Definition 7:
+    instance forall [4ma[0m. Show a => Show (List a)
+
+Use sites:
+  Definition used: 5
+      show :: [4ma[0m -> String
+  Definition used: 1
+      show :: a -> [4mString[0m
+  Definition used: 4
+    instance [4mShow[0m a => Show (List a)
+  Definition used: tv.instance.decl3
+    instance Show [4ma[0m => Show (List a)
+  Definition used: 4
+    instance Show a => [4mShow[0m (List a)
+  Definition used: 2
+    instance Show a => Show ([4mList[0m a)
+  Definition used: tv.instance.decl3
+    instance Show a => Show (List [4ma[0m)
+  Definition used: 4
+    instance forall a. [4mShow[0m a => Show (List a)
+  Definition used: 7
+    instance forall a. Show [4ma[0m => Show (List a)
+  Definition used: 4
+    instance forall a. Show a => [4mShow[0m (List a)
+  Definition used: 2
+    instance forall a. Show a => Show ([4mList[0m a)
+  Definition used: 7
+    instance forall a. Show a => Show (List [4ma[0m)

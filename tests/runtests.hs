@@ -2,7 +2,7 @@ module Main (main) where
 
 import           Control.Monad                   (fmap, mplus, when)
 import           Data.Foldable                   (foldMap)
-import           Data.List                       (nub, partition)
+import           Data.List                       (nub, partition, intercalate)
 import           Data.Maybe                      (fromMaybe)
 import           Language.Haskell.Exts
 import           Language.Haskell.Scope.Resolve
@@ -49,6 +49,7 @@ unitTests =
   , scopeTest "Shadowing2"
   , scopeTest "Shadowing3"
   , scopeTest "Shadowing4"
+  , scopeTest "Shadowing5"
   , scopeTest "Records1"
   , scopeTest "Records2"
   , scopeTest "DataType1"
@@ -92,7 +93,9 @@ getScopeInfo file = do
           defIndex = zip (map snd bindings) [1..]
       return $ Right $ unlines $
         [ "Scope errors:" ] ++
-        [ "  " ++ show err | err <- errs ] ++
+        [ "  " ++ show (ppScopeError err) ++ "\n" ++
+          show (ppLocation 4 fileContent loc)
+        | (loc, err) <- errs ] ++
         [ "", "Definitions:" ] ++
         concat
         [ [ printf "  Definition %d:" (n::Int)
@@ -100,9 +103,22 @@ getScopeInfo file = do
         | (loc, n) <- zip (map fst bindings) [1..] ] ++
         [ "", "Use sites:" ] ++
         concat
-        [ [ printf "  Definition used: %d" (fromMaybe 0 (lookup gname defIndex) :: Int)
+        [ [ printf "  Definition used: %s" (maybe (intercalate "." pos) show (lookup gname defIndex))
           , show $ ppLocation 4 fileContent usageLoc ]
-        | (usageLoc, gname) <- allResolved ]
+        | (usageLoc, gname@(GlobalName pos _) ) <- allResolved ]
+
+ppScopeError :: ScopeError -> Doc
+ppScopeError err =
+  case err of
+    ENotInScope _ NsTypes -> text "Type not in scope."
+    ENotInScope _ NsTypeVariables -> text "Type variable not in scope."
+    ENotInScope _ NsValues -> text "Value not in scope."
+    EAmbiguous _ambi -> text "Ambiguous."
+    ETypeAsClass -> text "Type used as type class."
+    ENotExported -> text "Identifier not exported from module."
+    EModNotFound -> text "Unknown module."
+    EInternal -> text "Internal error."
+
 
 ppLocation :: Int -> String -> SrcSpanInfo -> Doc
 ppLocation padding file srcSpanInfo =

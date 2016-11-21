@@ -6,10 +6,10 @@ Definitions:
   Definition 2:
           [4mx[0m -> x
   Definition 3:
-              [4mx[0m = 10
+        [4mx[0m = 10
 
 Use sites:
-  Definition used: 1
-    x = case [4mx[0m of
   Definition used: 3
+    x = case [4mx[0m of
+  Definition used: 2
           x -> [4mx[0m

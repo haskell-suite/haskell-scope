@@ -1,50 +1,59 @@
 Scope errors:
-  ENotInScope (QualifiedName {gnameModule = "", gnameIdentifier = "Show"}) NsTypes (SrcSpanInfo {srcInfoSpan = SrcSpan "Types1.hs" 10 6 10 10, srcInfoPoints = []})
+  Type not in scope.
+    z :: [4mShow[0m c => c
 
 Definitions:
   Definition 1:
     [4mx[0m = x
   Definition 2:
-    [4mx :: a[0m
+    y :: forall [4mb[0m. b
   Definition 3:
     [4my[0m = y
   Definition 4:
-    y :: forall [4mb[0m. b
-  Definition 5:
     [4mz[0m = z
-  Definition 6:
-    [4mz :: Show c => c[0m
-  Definition 7:
+  Definition 5:
     [4mf[0m = f
-  Definition 8:
-    [4mf :: a -> b[0m
+  Definition 6:
+    g :: a -> forall [4ma[0m. a
+  Definition 7:
+    [4mg[0m = g
 
 Use sites:
   Definition used: 1
     [4mx[0m :: a
-  Definition used: 2
+  Definition used: tv.decl0
     x :: [4ma[0m
   Definition used: 1
     x = [4mx[0m
   Definition used: 3
     [4my[0m :: forall b. b
-  Definition used: 4
+  Definition used: 2
     y :: forall b. [4mb[0m
   Definition used: 3
     y = [4my[0m
-  Definition used: 5
+  Definition used: 4
     [4mz[0m :: Show c => c
-  Definition used: 6
+  Definition used: tv.forall.decl4
     z :: Show [4mc[0m => c
-  Definition used: 6
+  Definition used: tv.forall.decl4
     z :: Show c => [4mc[0m
-  Definition used: 5
+  Definition used: 4
     z = [4mz[0m
-  Definition used: 7
-    [4mf[0m :: a -> b
-  Definition used: 8
-    f :: [4ma[0m -> b
-  Definition used: 8
-    f :: a -> [4mb[0m
-  Definition used: 7
+  Definition used: 5
+    [4mf[0m :: a -> b -> a
+  Definition used: tv.decl6
+    f :: [4ma[0m -> b -> a
+  Definition used: tv.decl6
+    f :: a -> [4mb[0m -> a
+  Definition used: tv.decl6
+    f :: a -> b -> [4ma[0m
+  Definition used: 5
     f = [4mf[0m
+  Definition used: 7
+    [4mg[0m :: a -> forall a. a
+  Definition used: tv.decl8
+    g :: [4ma[0m -> forall a. a
+  Definition used: 6
+    g :: a -> forall a. [4ma[0m
+  Definition used: 7
+    g = [4mg[0m

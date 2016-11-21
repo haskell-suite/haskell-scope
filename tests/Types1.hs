@@ -10,5 +10,8 @@ y = y
 z :: Show c => c
 z = z
 
-f :: a -> b
+f :: a -> b -> a
 f = f
+
+g :: a -> forall a. a
+g = g

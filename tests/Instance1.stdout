@@ -1,0 +1,29 @@
+Scope errors:
+
+Definitions:
+  Definition 1:
+    data [4mString[0m
+  Definition 2:
+    class [4mShow[0m a where
+  Definition 3:
+    class Show [4ma[0m where
+  Definition 4:
+      [4mshow[0m :: a -> String
+  Definition 5:
+      show [4mx[0m = show x
+
+Use sites:
+  Definition used: 3
+      show :: [4ma[0m -> String
+  Definition used: 1
+      show :: a -> [4mString[0m
+  Definition used: 2
+    instance [4mShow[0m String where
+  Definition used: 1
+    instance Show [4mString[0m where
+  Definition used: 4
+      [4mshow[0m x = show x
+  Definition used: 4
+      show x = [4mshow[0m x
+  Definition used: 5
+      show x = show [4mx[0m

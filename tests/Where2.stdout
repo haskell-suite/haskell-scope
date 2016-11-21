@@ -1,5 +1,6 @@
 Scope errors:
-  ENotInScope (QualifiedName {gnameModule = "", gnameIdentifier = "b"}) NsValues (SrcSpanInfo {srcInfoSpan = SrcSpan "Where2.hs" 6 6 6 7, srcInfoPoints = []})
+  Value not in scope.
+    a' = [4mb[0m
 
 Definitions:
   Definition 1:

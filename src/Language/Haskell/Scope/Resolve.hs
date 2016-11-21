@@ -39,6 +39,7 @@ module Language.Haskell.Scope.Resolve
     , NameInfo(..)
     , GlobalName(..)
     , QualifiedName(..)
+    , RNamespace(..)
     , Interface(..)
     , Source(..)
     , ScopeError(..)
@@ -111,7 +112,7 @@ getModuleName m =
         Module _ (Just (ModuleHead _ (ModuleName _ name) _ _)) _ _ _ -> name
 
 -- Resolve all names in a module
-resolve :: ResolveEnv -> Module SrcSpanInfo -> (ResolveEnv, [ScopeError], Module Origin)
+resolve :: ResolveEnv -> Module SrcSpanInfo -> (ResolveEnv, [(SrcSpanInfo, ScopeError)], Module Origin)
 resolve resolveEnv m =
     let (errs, m') = runRename resolveEnv $ resolveModule m
         iface = deriveInterface m'
@@ -168,10 +169,7 @@ data ScopedName = ScopedName Source GlobalName
     deriving ( Show )
 
 data ScopeError
-    = ENotInScope QualifiedName RNamespace SrcSpanInfo
-    -- | ETypeNotInScope QualifiedName SrcSpanInfo
-    -- | EConstructorNotInScope QualifiedName SrcSpanInfo
-    -- | ETypeVariableNotInScope QualifiedName SrcSpanInfo
+    = ENotInScope QualifiedName RNamespace
     | EAmbiguous [ScopedName]
     | ETypeAsClass
     | ENotExported
@@ -193,7 +191,7 @@ data Scope = Scope
     --      Sigh.
     , scopeTyVars     :: Map QualifiedName [ScopedName]
     , scopeValues     :: Map QualifiedName [ScopedName]
-    , scopeErrors     :: [ScopeError]
+    , scopeErrors     :: [(SrcSpanInfo, ScopeError)]
     }
 instance Monoid Scope where
     mempty = Scope
@@ -237,7 +235,7 @@ type Resolve a = a SrcSpanInfo -> Rename (a Origin)
 -----------------------------------------------------------
 -- Utilities
 
-runRename :: ResolveEnv -> Rename a -> ([ScopeError], a)
+runRename :: ResolveEnv -> Rename a -> ([(SrcSpanInfo,ScopeError)], a)
 runRename resolveEnv action = (scopeErrors scope, a)
   where
     (a, scope) = runWriter (runReaderT (unRename action) readerEnv)
@@ -257,6 +255,11 @@ mapMWithLimit :: String -> (a -> Rename b) -> [a] -> Rename [b]
 mapMWithLimit loc fn lst = mapM worker (zip [0::Int ..] lst)
   where
     worker (n, elt) = limitScope (loc ++ show n) (fn elt)
+
+mapMWithLocation :: String -> (a -> Rename b) -> [a] -> Rename [b]
+mapMWithLocation loc fn lst = mapM worker (zip [0::Int ..] lst)
+  where
+    worker (n, elt) = pushLocation (loc ++ show n) (fn elt)
 
 -- getTvRoot :: Rename (Maybe SrcSpanInfo)
 -- getTvRoot = asks (scopeTvRoot . snd)
@@ -292,8 +295,8 @@ withLimitedScope :: Interface -> Rename a -> Rename a
 withLimitedScope = undefined
 
 -- Run action without letting the tyVars escsape the scope.
-limitTyVarScope :: Rename a -> Rename a
-limitTyVarScope action = Rename $ ReaderT $ \readerEnv ->
+limitTyVarScope :: String -> Rename a -> Rename a
+limitTyVarScope loc action = pushLocation loc $ Rename $ ReaderT $ \readerEnv ->
     let scope = readerScope readerEnv
         inScope = scope{ scopeTyVars = scopeTyVars scope `Map.union` scopeTyVars nestedScope}
         (a, nestedScope) = runWriter $ runReaderT (unRename action) readerEnv{readerScope = inScope}
@@ -344,7 +347,7 @@ resolveName'' isTv qualification ns name =
                 Nothing ->
                     case isTv of
                         IsNotTv ->
-                            Left (ENotInScope qname ns src)
+                            Left (ENotInScope qname ns)
                         IsTv ->
                             Right (ScopedName LocalSource (GlobalName loc qname))
                 Just [var] -> Right var
@@ -354,7 +357,9 @@ resolveName'' isTv qualification ns name =
                     Left err -> ScopeError err
                     Right (ScopedName _ gname) -> Resolved gname
         tell mempty{ scopeErrors =
-                        maybeToList (either (Just) (const Nothing) ret) }
+              case ret of
+                Left err -> [(src, err)]
+                Right{}  -> [] }
         return $ Origin nameInfo src
     getScoped =
         case ns of
@@ -546,7 +551,7 @@ resolveType ty =
         TyTuple src boxed tys ->
             TyTuple (Origin None src) boxed
                 <$> mapM resolveType tys
-        TyForall src mbTyVarBinds mbCtx ty -> limitTyVarScope $
+        TyForall src mbTyVarBinds mbCtx ty -> limitTyVarScope "forall" $
             TyForall (Origin None src)
                 <$> resolveMaybe (mapM resolveTyVarBind) mbTyVarBinds
                 <*> resolveMaybe resolveContext mbCtx
@@ -643,7 +648,7 @@ resolveBinds binds =
     case binds of
         BDecls src decls ->
             BDecls (Origin None src)
-                <$> mapM (resolveDecl ResolveToplevel) decls
+                <$> mapMWithLocation "binds" (resolveDecl ResolveToplevel) decls
         _ -> error "Language.Haskell.Scope.resolveBinds: undefined"
 
 resolveAlt :: Resolve Alt
@@ -810,7 +815,7 @@ resolveDecl :: ResolveContext -> Resolve Decl
 resolveDecl rContext decl =
   case decl of
     DataDecl src isNewtype ctx dhead cons derive ->
-      limitTyVarScope $
+      limitTyVarScope "data" $
       DataDecl (Origin None src)
           <$> resolveDataOrNew isNewtype
           <*> resolveMaybe resolveContext ctx
@@ -847,14 +852,14 @@ resolveDecl rContext decl =
         TypeSig (Origin None src)
             <$> mapM (defineName NsValues) names
             <*> resolveType ty
-    ClassDecl src ctx dhead deps decls -> limitTyVarScope $
+    ClassDecl src ctx dhead deps decls -> limitTyVarScope "class" $
         ClassDecl (Origin None src)
             <$> resolveMaybe resolveContext ctx
             <*> resolveDeclHead dhead
             <*> mapM resolveFunDep deps
             <*> resolveMaybe (mapM resolveClassDecl) decls
 
-    InstDecl src mbOverlap instRule decls -> limitTyVarScope $
+    InstDecl src mbOverlap instRule decls -> limitTyVarScope "instance" $
         InstDecl (Origin None src)
             <$> resolveMaybe resolveOverlap mbOverlap
             <*> resolveInstRule instRule
@@ -992,5 +997,5 @@ resolveModule m =
                 <$> resolveMaybe resolveModuleHead mhead
                 <*> mapM resolveModulePragma pragma
                 <*> mapM resolveImportDecl imports
-                <*> mapM (resolveDecl ResolveToplevel) decls
+                <*> mapMWithLocation "decl" (resolveDecl ResolveToplevel) decls
         _ -> error "resolveModule"
