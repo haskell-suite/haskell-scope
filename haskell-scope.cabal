@@ -17,7 +17,9 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:     Language.Haskell.Scope
-  -- other-modules:
+  other-modules:       Language.Haskell.Scope.Monad,
+                       Language.Haskell.Scope.Resolve,
+                       Language.Haskell.Scope.SyntaxDirected
   other-extensions:    GeneralizedNewtypeDeriving, RecordWildCards
   build-depends:       base >=4.7 && <5, mtl >=2.2 && <2.3, containers >=0.5 && <0.6,
                        haskell-src-exts >=1.18 && <1.19
