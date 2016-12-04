@@ -7,6 +7,7 @@ module Language.Haskell.Scope
 
   , Origin(..)
   , NameInfo(..)
+  , Location
   , GlobalName(..)
   , QualifiedName(..)
   , RNamespace(..)
