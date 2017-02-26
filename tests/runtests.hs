@@ -86,10 +86,10 @@ getScopeInfo file = do
         msg
     ParseOk thisModule -> do
       let (_env, errs, scoped) = resolve emptyResolveEnv thisModule
-          allResolved = nub $ foldMap getResolved scoped
+          allResolved = foldMap getResolved scoped
           getResolved (Origin (Resolved gname) loc) = [(loc, gname)]
           getResolved _ = []
-          bindings = nub $ foldMap getBinding scoped
+          bindings = foldMap getBinding scoped
           getBinding (Origin (Binding gname) loc) = [(loc, gname)]
           getBinding _ = []
           defIndex = zip (map snd bindings) [1::Int ..]

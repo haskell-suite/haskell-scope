@@ -40,14 +40,14 @@ getModuleName m =
 -- Types and Monad
 
 data Origin = Origin NameInfo SrcSpanInfo
-    deriving ( Show )
+    deriving ( Eq, Ord, Show )
 
 data NameInfo
     = Resolved GlobalName
     | Binding GlobalName
     | None
     | ScopeError ScopeError
-    deriving ( Show )
+    deriving ( Show, Eq, Ord )
 
 type Location = [String]
 
@@ -78,9 +78,9 @@ data Source
     = ImplicitSource -- Imported implicitly, usually from Prelude.
     | LocalSource -- Not imported, defined locally.
     | ModuleSource (ModuleName Origin)
-    deriving ( Show )
+    deriving ( Eq, Ord, Show )
 data ScopedName = ScopedName Source GlobalName
-    deriving ( Show )
+    deriving ( Eq, Ord, Show )
 
 data ScopeError
     = ENotInScope QualifiedName RNamespace
@@ -89,7 +89,7 @@ data ScopeError
     | ENotExported
     | EModNotFound
     | EInternal
-    deriving ( Show )
+    deriving ( Eq, Ord, Show )
 data QualifiedName = QualifiedName
     { qnameModule     :: String
     , qnameIdentifier :: String }
@@ -98,7 +98,7 @@ data RNamespace
     = NsTypes
     | NsTypeVariables
     | NsValues
-    deriving ( Show )
+    deriving ( Eq, Ord, Show )
 data Scope = Scope
     { scopeTypes  :: Map QualifiedName [ScopedName]
     -- XXX: limitTyVarScope requires tyvars to be separate from types.

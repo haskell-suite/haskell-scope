@@ -4,7 +4,9 @@ Definitions:
   Definition 1:
     [4my[0m = y
   Definition 2:
-    [4mx[0m y = y
+    [4mx y = y[0m
+    [4m  where[0m
+    [4m    y = 10[0m
   Definition 3:
     x [4my[0m = y
   Definition 4:
@@ -13,5 +15,7 @@ Definitions:
 Use sites:
   Definition used: 1
     y = [4my[0m
+  Definition used: 2
+    [4mx[0m y = y
   Definition used: 4
     x y = [4my[0m

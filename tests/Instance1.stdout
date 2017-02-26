@@ -22,6 +22,8 @@ Use sites:
   Definition used: 1
     instance Show [4mString[0m where
   Definition used: 4
+      [4mshow x = show x[0m
+  Definition used: 4
       [4mshow[0m x = show x
   Definition used: 4
       show x = [4mshow[0m x

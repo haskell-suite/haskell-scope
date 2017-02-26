@@ -30,6 +30,8 @@ Use sites:
   Definition used: 1
       showList :: List a -> [4mString[0m
   Definition used: 7
+      [4mshowList lst = show lst[0m
+  Definition used: 7
       [4mshowList[0m lst = show lst
   Definition used: 6
       showList lst = [4mshow[0m lst

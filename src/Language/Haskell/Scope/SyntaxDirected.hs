@@ -1,31 +1,3 @@
-{-
-Goals:
-  Intuitive interface.
-  Good error messages, or at least the foundation for good error messages.
-  Origin analysis of recursive modules.
-  Fast.
-  Support rebindable syntax.
-  Support scoped type variables.
-
-Bugs:
-  Instance methods aren't resolved properly.
-
-Notes:
-  Rebindable syntax? We do not do any desugaring. Instead we just resolve
-  the relevant functions and add them to the module interface. When desugaring
-  with RebindableSyntax enabled, those functions can be used instead of the
-  default Prelude ones.
-  This wont' work. We need to inspect the scope at the locations the rebindable
-  functions are used. Looking at the global scope isn't enough.
-
-  Scope environment:
-  We need to know about the fields of data construtors:
-  fn DataType{..} = ...
-  We need to know about the members of classes:
-  instance Module.Class Ty where
-    thisMethodDoesNotHaveToBeQualified = ...
-
--}
 {-# LANGUAGE RecordWildCards #-}
 module Language.Haskell.Scope.SyntaxDirected
     ( resolveModule
@@ -39,7 +11,6 @@ import           Data.Monoid                  (Monoid (..))
 import           Language.Haskell.Exts.Syntax
 
 import           Language.Haskell.Scope.Monad
-
 
 -----------------------------------------------------------
 -- Name binding and resolution
@@ -103,8 +74,8 @@ resolveQName ns qname =
                 <*> resolveName' m ns name
         UnQual src name -> do
             name' <- resolveName ns name
-            let Origin origin _ = ann name'
-            UnQual (Origin origin src)
+            -- let Origin origin _ = ann name'
+            UnQual (Origin None src)
                 <$> pure name'
         Special src specialCon ->
             Special (Origin None src)
@@ -477,20 +448,22 @@ resolveRhs rhs =
                 <$> resolveExp expr
         _ -> error "resolveRhs"
 
-resolveMatch :: Name Origin -> Resolve Match
-resolveMatch name match =
+resolveMatch :: Resolve Match
+resolveMatch match =
   case match of
-    Match src _name pats rhs mbBinds -> do
+    Match src name pats rhs mbBinds -> do
+      name' <- resolveName NsValues name
       pats' <- mapM resolvePat pats
       limitScope "rhs" $
-        Match (Origin None src) name pats'
+        Match (Origin None src) name' pats'
           <$> resolveRhs rhs
           <*> resolveMaybe resolveBinds mbBinds
-    InfixMatch src leftPat _name rightPats rhs mbBinds -> do
+    InfixMatch src leftPat name rightPats rhs mbBinds -> do
+      name' <- resolveName NsValues name
       leftPat' <- resolvePat leftPat
       rightPats' <- mapM resolvePat rightPats
       limitScope "rhs" $
-        InfixMatch (Origin None src) leftPat' name rightPats'
+        InfixMatch (Origin None src) leftPat' name' rightPats'
           <$> resolveRhs rhs
           <*> resolveMaybe resolveBinds mbBinds
 
@@ -550,8 +523,9 @@ resolveDecl rContext decl =
         name <- case rContext of
                   ResolveToplevel -> defineName NsValues (matchName $ head matches)
                   _               -> resolveName NsValues (matchName $ head matches)
-        FunBind (Origin None src)
-            <$> mapMWithLimit "match" (resolveMatch name) matches
+        let Origin gname _ = ann name
+        FunBind (Origin gname src)
+            <$> mapMWithLimit "match" resolveMatch matches
     -- FIXME: PatBind in classes and instances
     PatBind src pat rhs binds -> do
         pat' <- resolvePat pat

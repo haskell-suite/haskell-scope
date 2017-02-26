@@ -18,8 +18,6 @@ Use sites:
   Definition used: 1
     instance [4mString[0m `Show` String
   Definition used: 2
-    instance String [4m`Show`[0m String
-  Definition used: 2
     instance String `[4mShow[0m` String
   Definition used: 1
     instance String `Show` [4mString[0m

@@ -2,13 +2,16 @@ Scope errors:
 
 Definitions:
   Definition 1:
-    [4ma[0m x = b
+    [4ma x = b[0m
+    [4m  where b = b[0m
   Definition 2:
     a [4mx[0m = b
   Definition 3:
       where [4mb[0m = b
 
 Use sites:
+  Definition used: 1
+    [4ma[0m x = b
   Definition used: 3
     a x = [4mb[0m
   Definition used: 3

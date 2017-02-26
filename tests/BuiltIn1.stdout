@@ -6,7 +6,7 @@ Definitions:
   Definition 2:
     [4my[0m = []
   Definition 3:
-    [4mz[0m [x] = x
+    [4mz [x] = x[0m
   Definition 4:
     z [[4mx[0m] = x
 
@@ -17,5 +17,7 @@ Use sites:
     [4my[0m :: [()]
   Definition used: 3
     [4mz[0m :: [()] -> ()
+  Definition used: 3
+    [4mz[0m [x] = x
   Definition used: 4
     z [x] = [4mx[0m
