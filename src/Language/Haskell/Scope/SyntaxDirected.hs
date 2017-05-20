@@ -167,6 +167,9 @@ resolveContext ctx =
         CxSingle src asst ->
             CxSingle (Origin None src)
                 <$> resolveAsst asst
+        CxTuple src assts ->
+            CxTuple (Origin None src)
+                <$> mapM resolveAsst assts
         CxEmpty src -> pure (CxEmpty (Origin None src))
         _ -> error "resolveContext"
 
