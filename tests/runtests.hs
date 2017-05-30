@@ -5,7 +5,7 @@ import           Data.Foldable                  (foldMap)
 import           Data.List                      (intercalate, nub)
 import           Language.Haskell.Exts          (ParseResult (..), SrcSpan (..),
                                                  SrcSpanInfo (..), parseFile)
-import           Language.Haskell.Scope.Resolve
+import           Language.Haskell.Scope
 import           System.Directory               (doesFileExist)
 import           System.Environment             (getArgs)
 import           System.Exit                    (exitSuccess, exitFailure)
