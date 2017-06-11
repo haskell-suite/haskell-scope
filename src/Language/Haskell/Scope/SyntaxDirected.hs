@@ -9,6 +9,8 @@ import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Monoid                  (Monoid (..))
 import           Language.Haskell.Exts.Syntax
+import           Language.Haskell.Exts
+import           Language.Haskell.Exts.Pretty
 
 import           Language.Haskell.Scope.Monad
 
@@ -43,16 +45,16 @@ resolveName'' isTv qualification ns name =
                         IsNotTv ->
                             Left (ENotInScope qname ns)
                         IsTv ->
-                            Right (ScopedName LocalSource (GlobalName loc qname))
+                            Right (ScopedName LocalSource (GlobalName loc src qname))
                 Just [var] -> Right var
-                Just vars  -> Left (EAmbiguous vars)
+                Just vars  -> Left (EAmbiguous src vars)
             nameInfo =
                 case ret of
                     Left err -> ScopeError err
                     Right (ScopedName _ gname) -> Resolved gname
         tell mempty{ scopeErrors =
               case ret of
-                Left err -> [(src, err)]
+                Left err -> [err]
                 Right{}  -> [] }
         return $ Origin nameInfo src
     getScoped =
@@ -85,8 +87,9 @@ defineName :: RNamespace -> Resolve Name
 defineName ns name = do
     thisModule <- asks readerModuleName
     loc <- getLocation
-    let qname = QualifiedName "" ident
-        gname = GlobalName loc (QualifiedName thisModule ident)
+    let src = ann name
+        qname = QualifiedName "" ident
+        gname = GlobalName loc src (QualifiedName thisModule ident)
         resolved = ScopedName LocalSource gname
     case ns of
         NsValues ->
@@ -101,6 +104,29 @@ defineName ns name = do
       case name of
           Ident a b  -> (Ident, a, b)
           Symbol a b -> (Symbol, a, b)
+
+defineMultiName :: RNamespace -> SrcSpanInfo -> Name SrcSpanInfo -> (Name Origin -> Rename a) -> Rename a
+defineMultiName ns bindingSrc name cont = do
+    thisModule <- asks readerModuleName
+    loc <- getLocation
+    let qname = QualifiedName "" ident
+        gname = GlobalName loc bindingSrc (QualifiedName thisModule ident)
+        resolved = ScopedName LocalSource gname
+    case ns of
+        NsValues ->
+            tell mempty{ scopeValues = Map.singleton qname [resolved]}
+        NsTypes  ->
+            tell mempty{ scopeTypes = Map.singleton qname [resolved]}
+        NsTypeVariables ->
+            tell mempty{ scopeTyVars = Map.singleton qname [resolved] }
+    restrictScope qname resolved
+      (cont $ con (Origin (Binding gname) src) ident)
+  where
+    (con, src, ident) =
+      case name of
+          Ident a b  -> (Ident, a, b)
+          Symbol a b -> (Symbol, a, b)
+
 
 -- resolveMaybe :: Resolve a -> Resolve (Maybe a)
 resolveMaybe :: (a -> Rename b) -> Maybe a -> Rename (Maybe b)
@@ -139,18 +165,21 @@ resolveTyVarBind tyVarBind =
 
 resolveDeclHead :: Resolve DeclHead
 resolveDeclHead dhead =
-    case dhead of
-        DHApp src dh tyVarBind ->
-            DHApp
-                <$> pure (Origin None src)
-                <*> resolveDeclHead dh
-                <*> resolveTyVarBind tyVarBind
-        DHead src name ->
-            DHead
-                <$> pure (Origin None src)
-                <*> defineName NsTypes name
-        DHInfix{} -> error "resolveDeclHead"
-        DHParen _ next -> resolveDeclHead next
+  case dhead of
+    DHApp src dh tyVarBind ->
+      DHApp (Origin None src)
+        <$> resolveDeclHead dh
+        <*> resolveTyVarBind tyVarBind
+    DHead src name ->
+      DHead (Origin None src)
+        <$> defineName NsTypes name
+    DHInfix src tyVarBind name ->
+      DHInfix (Origin None src)
+        <$> resolveTyVarBind tyVarBind
+        <*> defineName NsTypes name
+    DHParen src next ->
+      DHParen (Origin None src)
+        <$> resolveDeclHead next
 
 resolveAsst :: Resolve Asst
 resolveAsst asst =
@@ -171,7 +200,6 @@ resolveContext ctx =
             CxTuple (Origin None src)
                 <$> mapM resolveAsst assts
         CxEmpty src -> pure (CxEmpty (Origin None src))
-        _ -> error "resolveContext"
 
 resolveOverlap :: Resolve Overlap
 resolveOverlap _overlap = error "resolveOverlap"
@@ -227,36 +255,41 @@ resolveSpecialCon specialCon = pure $
 
 resolveType :: Resolve Type
 resolveType ty =
-    case ty of
-        TyCon src qname ->
-            TyCon (Origin None src)
-                <$> resolveQName NsTypes qname
-        TyVar src tyVar ->
-            TyVar (Origin None src)
-                <$> resolveTyVar tyVar
-        TyFun src a b ->
-            TyFun (Origin None src)
-                <$> resolveType a
-                <*> resolveType b
-        TyApp src a b ->
-            TyApp (Origin None src)
-                <$> resolveType a
-                <*> resolveType b
-        TyParen src sub ->
-            TyParen (Origin None src)
-                <$> resolveType sub
-        TyTuple src boxed tys ->
-            TyTuple (Origin None src) boxed
-                <$> mapM resolveType tys
-        TyForall src mbTyVarBinds mbCtx ty' -> limitTyVarScope "forall" $
-            TyForall (Origin None src)
-                <$> resolveMaybe (mapM resolveTyVarBind) mbTyVarBinds
-                <*> resolveMaybe resolveContext mbCtx
-                <*> resolveType ty'
-        TyList src ty' ->
-            TyList (Origin None src)
-                <$> resolveType ty'
-        _ -> error $ "resolveType: " ++ show ty
+  case ty of
+    TyCon src qname ->
+      TyCon (Origin None src)
+        <$> resolveQName NsTypes qname
+    TyVar src tyVar ->
+      TyVar (Origin None src)
+        <$> resolveTyVar tyVar
+    TyFun src a b ->
+      TyFun (Origin None src)
+        <$> resolveType a
+        <*> resolveType b
+    TyApp src a b ->
+      TyApp (Origin None src)
+        <$> resolveType a
+        <*> resolveType b
+    TyParen src sub ->
+      TyParen (Origin None src)
+        <$> resolveType sub
+    TyInfix src l qname r ->
+      TyInfix (Origin None src)
+        <$> resolveType l
+        <*> resolveQName NsTypes qname
+        <*> resolveType r
+    TyTuple src boxed tys ->
+      TyTuple (Origin None src) boxed
+        <$> mapM resolveType tys
+    TyForall src mbTyVarBinds mbCtx ty' -> limitTyVarScope "forall" $
+      TyForall (Origin None src)
+        <$> resolveMaybe (mapM resolveTyVarBind) mbTyVarBinds
+        <*> resolveMaybe resolveContext mbCtx
+        <*> resolveType ty'
+    TyList src ty' ->
+      TyList (Origin None src)
+        <$> resolveType ty'
+    _ -> error $ "resolveType: " ++ prettyPrint ty
 
 -- resolveBangType :: Resolve BangType
 -- resolveBangType bangTy =
@@ -330,7 +363,7 @@ resolvePat pat =
                 <$> resolvePat a
                 <*> resolveQName NsValues con
                 <*> resolvePat b
-        _ -> error $ "resolvePat: " ++ show pat
+        _ -> error $ "resolvePat: " ++ prettyPrint pat
 
 -- resolveGuardedAlts :: Resolve GuardedAlts
 -- resolveGuardedAlts galts =
@@ -384,72 +417,135 @@ resolveLiteral lit = pure $
         con (Origin None src)
 
 -- XXX: Support debindable syntax.
-resolveStmt :: Resolve Stmt
-resolveStmt stmt =
-    case stmt of
-        Generator src pat expr ->
-            Generator (Origin None src)
+resolveStmts :: [Stmt SrcSpanInfo] -> Rename [Stmt Origin]
+resolveStmts [] = return []
+resolveStmts (stmt:stmts) =
+  case stmt of
+    Generator src pat expr -> limitScope "gen" $
+      (:)
+        <$> (Generator (Origin None src)
                 <$> resolvePat pat
-                <*> limitScope "gen" (resolveExp expr)
-        Qualifier src expr ->
-            Qualifier (Origin None src)
-                <$> limitScope "qual" (resolveExp expr)
-        _ -> error $ "resolveStmt: " ++ show stmt
+                <*> limitScope "gen" (resolveExp expr))
+        <*> resolveStmts stmts
+    Qualifier src expr ->
+      (:)
+        <$> (Qualifier (Origin None src)
+                <$> limitScope "qual" (resolveExp expr))
+        <*> resolveStmts stmts
+    LetStmt src binds -> limitScope "let" $
+      (:)
+        <$> (LetStmt (Origin None src)
+                <$> resolveBinds binds )
+        <*> resolveStmts stmts
+    _ -> error $ "resolveStmts: " ++ prettyPrint stmt
+
+resolveFieldUpdate :: Resolve FieldUpdate
+resolveFieldUpdate upd =
+  case upd of
+    FieldUpdate src qname expr ->
+      FieldUpdate (Origin None src)
+        <$> resolveQName NsValues qname
+        <*> resolveExp expr
+    FieldPun src qname ->
+      FieldPun (Origin None src)
+        <$> resolveQName NsValues qname
+    FieldWildcard src -> pure $ FieldWildcard (Origin None src)
 
 resolveExp :: Resolve Exp
 resolveExp expr =
-    case expr of
-        Case src scrut alts ->
-            Case (Origin None src)
-                <$> resolveExp scrut
-                <*> mapMWithLimit "alt" resolveAlt alts
-        Con src qname ->
-            Con (Origin None src)
-                <$> resolveQName NsValues qname
-        Var src qname ->
-            Var (Origin None src)
-                <$> resolveQName NsValues qname
-        App src a b ->
-            App (Origin None src)
-                <$> resolveExp a
-                <*> resolveExp b
-        InfixApp src a qop b ->
-            InfixApp (Origin None src)
-                <$> resolveExp a
-                <*> resolveQOp qop
-                <*> resolveExp b
-        Paren src sub ->
-            Paren (Origin None src)
-                <$> resolveExp sub
-        Lambda src pats sub -> limitScope "lambda" $
-            Lambda (Origin None src)
-                <$> mapM resolvePat pats
-                <*> resolveExp sub
-        Lit src lit ->
-            Lit (Origin None src)
-                <$> resolveLiteral lit
-        Tuple src boxed exps ->
-            Tuple (Origin None src) boxed
-                <$> mapMWithLimit "tuple" resolveExp exps
-        Let src binds inExpr -> limitScope "let" $
-            Let (Origin None src)
-                <$> resolveBinds binds
-                <*> resolveExp inExpr
-        List src exprs ->
-            List (Origin None src)
-                <$> mapMWithLimit "list" resolveExp exprs
-        Do src stmts ->
-            Do (Origin None src)
-                <$> mapM resolveStmt stmts
-        _ -> error $ "resolveExp: " ++ show expr
+  case expr of
+    Case src scrut alts ->
+      Case (Origin None src)
+        <$> resolveExp scrut
+        <*> mapMWithLimit "alt" resolveAlt alts
+    Con src qname ->
+      Con (Origin None src)
+        <$> resolveQName NsValues qname
+    Var src qname ->
+      Var (Origin None src)
+        <$> resolveQName NsValues qname
+    App src a b ->
+      App (Origin None src)
+        <$> resolveExp a
+        <*> resolveExp b
+    NegApp src sub ->
+      NegApp (Origin None src)
+        <$> resolveExp sub
+    InfixApp src a qop b ->
+      InfixApp (Origin None src)
+        <$> resolveExp a
+        <*> resolveQOp qop
+        <*> resolveExp b
+    Paren src sub ->
+      Paren (Origin None src)
+        <$> resolveExp sub
+    -- FIXME: How the field updates are resolved depends on the qname, I think.
+    RecConstr src qname fieldUpdates ->
+      RecConstr (Origin None src)
+        <$> resolveQName NsValues qname
+        <*> mapM resolveFieldUpdate fieldUpdates
+    RecUpdate src sub fieldUpdates ->
+      RecUpdate (Origin None src)
+        <$> resolveExp sub
+        <*> mapM resolveFieldUpdate fieldUpdates
+    EnumFrom src from ->
+      EnumFrom (Origin None src)
+        <$> resolveExp from
+    EnumFromTo src from to ->
+      EnumFromTo (Origin None src)
+        <$> resolveExp from
+        <*> resolveExp to
+    EnumFromThen src from step ->
+      EnumFromThen (Origin None src)
+        <$> resolveExp from
+        <*> resolveExp step
+    EnumFromThenTo src from step to ->
+      EnumFromThenTo (Origin None src)
+        <$> resolveExp from
+        <*> resolveExp step
+        <*> resolveExp to
+    Lambda src pats sub -> limitScope "lambda" $
+      Lambda (Origin None src)
+        <$> mapM resolvePat pats
+        <*> resolveExp sub
+    Lit src lit ->
+      Lit (Origin None src)
+        <$> resolveLiteral lit
+    Tuple src boxed exps ->
+      Tuple (Origin None src) boxed
+        <$> mapMWithLimit "tuple" resolveExp exps
+    Let src binds inExpr -> limitScope "let" $
+      Let (Origin None src)
+        <$> resolveBinds binds
+        <*> resolveExp inExpr
+    If src if_e then_e else_e ->
+      If (Origin None src)
+        <$> resolveExp if_e
+        <*> resolveExp then_e
+        <*> resolveExp else_e
+    List src exprs ->
+      List (Origin None src)
+        <$> mapMWithLimit "list" resolveExp exprs
+    Do src stmts ->
+      Do (Origin None src)
+        <$> resolveStmts stmts
+    _ -> error $ "resolveExp: " ++ prettyPrint expr
+
+resolveGuardedRhs :: Resolve GuardedRhs
+resolveGuardedRhs (GuardedRhs src stmts expr) =
+  GuardedRhs (Origin None src)
+    <$> resolveStmts stmts
+    <*> resolveExp expr
 
 resolveRhs :: Resolve Rhs
 resolveRhs rhs =
-    case rhs of
-        UnGuardedRhs src expr ->
-            UnGuardedRhs (Origin None src)
-                <$> resolveExp expr
-        _ -> error "resolveRhs"
+  case rhs of
+    UnGuardedRhs src expr ->
+      UnGuardedRhs (Origin None src)
+        <$> resolveExp expr
+    GuardedRhss src guarded ->
+      GuardedRhss (Origin None src)
+        <$> mapM resolveGuardedRhs guarded
 
 resolveMatch :: Resolve Match
 resolveMatch match =
@@ -520,74 +616,84 @@ resolveDecl rContext decl =
           <*> mapM resolveQualConDecl cons
           <*> resolveMaybe resolveDeriving derive
     FunBind src matches -> do
-        -- We use the bind site to uniquely identify
-        -- top-level functions. For class declarations,
-        -- we use their type signature.
-        name <- case rContext of
-                  ResolveToplevel -> defineName NsValues (matchName $ head matches)
-                  _               -> resolveName NsValues (matchName $ head matches)
-        let Origin gname _ = ann name
-        FunBind (Origin gname src)
-            <$> mapMWithLimit "match" resolveMatch matches
+      -- We use the bind site to uniquely identify
+      -- top-level functions. For class declarations,
+      -- we use their type signature.
+      case rContext of
+        ResolveToplevel ->
+          defineMultiName NsValues src (matchName $ head matches) $ \name -> do
+            let Origin info _ = ann name
+            FunBind (Origin info src)
+                <$> mapMWithLimit "match" resolveMatch matches
+        _               -> do
+          name <- resolveName NsValues (matchName $ head matches)
+          let Origin info _ = ann name
+          FunBind (Origin info src)
+              <$> mapMWithLimit "match" resolveMatch matches
+
     -- FIXME: PatBind in classes and instances
     PatBind src pat rhs binds -> do
-        pat' <- resolvePat pat
-        limitScope "rhs" $ PatBind (Origin None src)
-            <$> pure pat'
-            <*> resolveRhs rhs
-            <*> resolveMaybe resolveBinds binds
+      pat' <- resolvePat pat
+      limitScope "rhs" $ PatBind (Origin None src)
+          <$> pure pat'
+          <*> resolveRhs rhs
+          <*> resolveMaybe resolveBinds binds
 
 
     -- There's an implicit forall here.
     -- Gather up all the unbound type variables and bind them
     -- to the point of the signature.
     TypeSig src names ty | rContext == ResolveToplevel ->
-        -- FIXME: Bind tyvars to the src of the definition, not the tysig.
-        TypeSig (Origin None src)
-            <$> mapM (resolveName NsValues) names
-            <*> resolveType ty
+      -- FIXME: Bind tyvars to the src of the definition, not the tysig.
+      TypeSig (Origin None src)
+          <$> mapM (resolveName NsValues) names
+          <*> resolveType ty
     TypeSig src names ty | rContext == ResolveClass ->
-        TypeSig (Origin None src)
-            <$> mapM (defineName NsValues) names
-            <*> resolveType ty
+      TypeSig (Origin None src)
+          <$> mapM (defineName NsValues) names
+          <*> resolveType ty
     ClassDecl src ctx dhead deps decls -> limitTyVarScope "class" $
-        ClassDecl (Origin None src)
-            <$> resolveMaybe resolveContext ctx
-            <*> resolveDeclHead dhead
-            <*> mapM resolveFunDep deps
-            <*> resolveMaybe (mapM resolveClassDecl) decls
+      ClassDecl (Origin None src)
+          <$> resolveMaybe resolveContext ctx
+          <*> resolveDeclHead dhead
+          <*> mapM resolveFunDep deps
+          <*> resolveMaybe (mapM resolveClassDecl) decls
 
     InstDecl src mbOverlap instRule decls -> limitTyVarScope "instance" $
-        InstDecl (Origin None src)
-            <$> resolveMaybe resolveOverlap mbOverlap
-            <*> resolveInstRule instRule
-            <*> resolveMaybe (mapM resolveInstDecl) decls
+      InstDecl (Origin None src)
+          <$> resolveMaybe resolveOverlap mbOverlap
+          <*> resolveInstRule instRule
+          <*> resolveMaybe (mapM resolveInstDecl) decls
 
     ForImp src conv safety ident name ty ->
-        -- Bind free type variables to the foreign import.
-        ForImp (Origin None src)
-            <$> resolveCallConv conv
-            <*> resolveMaybe resolveSafety safety
-            <*> pure ident
-            <*> defineName NsValues name
-            <*> resolveType ty
+      -- Bind free type variables to the foreign import.
+      ForImp (Origin None src)
+          <$> resolveCallConv conv
+          <*> resolveMaybe resolveSafety safety
+          <*> pure ident
+          <*> defineName NsValues name
+          <*> resolveType ty
     InlineSig src noInline mbActivation qname ->
-        InlineSig (Origin None src) noInline
-            <$> resolveMaybe resolveActivation mbActivation
-            <*> resolveQName NsValues qname
+      InlineSig (Origin None src) noInline
+          <$> resolveMaybe resolveActivation mbActivation
+          <*> resolveQName NsValues qname
 
-    TypeDecl src dhead ty ->
-        TypeDecl (Origin None src)
-            <$> resolveDeclHead dhead
-            <*> resolveType ty
+    TypeDecl src dhead ty -> limitTyVarScope "type" $
+      TypeDecl (Origin None src)
+          <$> resolveDeclHead dhead
+          <*> resolveType ty
 
     InfixDecl src assoc precedence ops ->
-        InfixDecl (Origin None src)
-            <$> resolveAssoc assoc
-            <*> pure precedence
-            <*> mapM resolveOp ops
+      InfixDecl (Origin None src)
+          <$> resolveAssoc assoc
+          <*> pure precedence
+          <*> mapM resolveOp ops
 
-    _ -> error $ "resolveDecl: " ++ show decl
+    DefaultDecl src tys ->
+      DefaultDecl (Origin None src)
+        <$> mapM resolveType tys
+
+    _ -> error $ "resolveDecl: " ++ prettyPrint decl
 
 resolveModuleName :: Resolve ModuleName
 resolveModuleName (ModuleName src name) =
@@ -628,7 +734,7 @@ resolveExportSpec spec =
                 <$> resolveEWildcard wild
                 <*> resolveQName NsTypes qname
                 <*> mapM resolveCName cnames
-        _ -> error $ "resolveExportSpec: " ++ show spec
+        _ -> error $ "resolveExportSpec: " ++ prettyPrint spec
 
 resolveExportSpecList :: Resolve ExportSpecList
 resolveExportSpecList list =
@@ -687,10 +793,16 @@ resolveImportDecl ImportDecl{..} = do
     bindImports decl
     return decl
 
+moduleHeadLocation :: Maybe (ModuleHead a) -> String
+moduleHeadLocation Nothing = "Main"
+moduleHeadLocation (Just (ModuleHead _ (ModuleName _ name) _warns _exports)) =
+  name
+
 resolveModule :: Resolve Module
 resolveModule m =
     case m of
         Module src mhead pragma imports decls ->
+            pushLocation (moduleHeadLocation mhead) $
             Module (Origin None src)
                 <$> resolveMaybe resolveModuleHead mhead
                 <*> mapM resolveModulePragma pragma

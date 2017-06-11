@@ -83,7 +83,7 @@ deriveInterface m =
         _ -> error "Language.Haskell.Scope.deriveInterface: undefined"
 
 -- Resolve all names in a module
-resolve :: ResolveEnv -> Module SrcSpanInfo -> (ResolveEnv, [(SrcSpanInfo, ScopeError)], Module Origin)
+resolve :: ResolveEnv -> Module SrcSpanInfo -> (ResolveEnv, [ScopeError], Module Origin)
 resolve resolveEnv m =
     let (errs, m') = runRename resolveEnv $ resolveModule m
         iface = deriveInterface m'

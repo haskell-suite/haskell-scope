@@ -14,7 +14,7 @@ import           System.IO                      (hPutStrLn, stderr)
 import           Test.Framework                 (Test, defaultMain, testGroup)
 import           Test.Framework.Providers.HUnit
 import           Text.PrettyPrint.ANSI.Leijen   (Doc, indent, text, underline,
-                                                 vsep, (<>))
+                                                 vsep, (<>),(<$$>))
 import           Text.Printf                    (printf)
 
 main :: IO ()
@@ -95,27 +95,37 @@ getScopeInfo file = do
           defIndex = zip (map snd bindings) [1::Int ..]
       return $ Right $ unlines $
         [ "Scope errors:" ] ++
-        [ "  " ++ show (ppScopeError err) ++ "\n" ++
-          show (ppLocation 4 fileContent loc)
-        | (loc, err) <- errs ] ++
+        [ show (indent 2 $ ppScopeError err fileContent)
+        | err <- errs ] ++
         [ "", "Definitions:" ] ++
         concat
-        [ [ printf "  Definition %d:" (n::Int)
+        [ [ printf "  Definition %d, from %s:" (n::Int) (intercalate "." $ reverse addr)
           , show $ ppLocation 4 fileContent loc ]
-        | (loc, n) <- zip (map fst bindings) [1..] ] ++
+        | ((loc, GlobalName addr _src _), n) <- zip bindings [1..] ] ++
         [ "", "Use sites:" ] ++
         concat
-        [ [ printf "  Definition used: %s" (maybe (intercalate "." pos) show (lookup gname defIndex))
+        [ [ printf "  Definition used: %s" (maybe (intercalate "." $ reverse pos) show (lookup gname defIndex))
           , show $ ppLocation 4 fileContent usageLoc ]
-        | (usageLoc, gname@(GlobalName pos _) ) <- allResolved ]
+        | (usageLoc, gname@(GlobalName pos _src _) ) <- allResolved ]
 
-ppScopeError :: ScopeError -> Doc
-ppScopeError err =
+ppScopeError :: ScopeError -> String -> Doc
+ppScopeError err fileContent =
   case err of
     ENotInScope _ NsTypes -> text "Type not in scope."
     ENotInScope _ NsTypeVariables -> text "Type variable not in scope."
     ENotInScope _ NsValues -> text "Value not in scope."
-    EAmbiguous _ambi -> text "Ambiguous."
+    EAmbiguous loc ambi ->
+      text "Ambiguous:" <$$>
+      indent 2
+        (text "This identifier:" <$$>
+        ppLocation 2 fileContent loc <$$>
+        text "Could refer to any of these:" <$$>
+        vsep [ ppLocation 2 fileContent (globalNameSrcSpanInfo gname)
+             | ScopedName _source gname <- ambi])
+    EConflicting dups ->
+      text "Conflicting definitions:" <$$>
+      vsep [ ppLocation 2 fileContent (globalNameSrcSpanInfo gname)
+           | ScopedName _source gname <- dups]
     ETypeAsClass -> text "Type used as type class."
     ENotExported -> text "Identifier not exported from module."
     EModNotFound -> text "Unknown module."

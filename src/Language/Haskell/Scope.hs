@@ -10,11 +10,13 @@ module Language.Haskell.Scope
   , Location
   , GlobalName(..)
   , QualifiedName(..)
+  , ScopedName(..)
   , RNamespace(..)
   , Interface(..)
   , Source(..)
   , ScopeError(..)
   , resolve
+  , globalNameSrcSpanInfo
 
   ) where
 

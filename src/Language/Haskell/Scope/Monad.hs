@@ -8,7 +8,7 @@ import           Control.Monad.Writer         (MonadWriter, Writer,
 import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Monoid                  (Monoid (..))
-import           Language.Haskell.Exts.SrcLoc (SrcSpanInfo (..))
+import           Language.Haskell.Exts.SrcLoc (SrcSpanInfo (..), noSrcSpan)
 import           Language.Haskell.Exts.Syntax
 
 -- ModuleName -> Interface
@@ -51,14 +51,14 @@ data NameInfo
 
 type Location = [String]
 
-data GlobalName = GlobalName Location QualifiedName
+data GlobalName = GlobalName Location SrcSpanInfo QualifiedName
     deriving ( Show, Eq, Ord )
 
--- globalNameSrcSpanInfo :: GlobalName -> SrcSpanInfo
--- globalNameSrcSpanInfo (GlobalName src _) = src
+globalNameSrcSpanInfo :: GlobalName -> SrcSpanInfo
+globalNameSrcSpanInfo (GlobalName _ src _) = src
 
 globalNameIdentifier :: GlobalName -> String
-globalNameIdentifier (GlobalName _ (QualifiedName _mod ident)) = ident
+globalNameIdentifier (GlobalName _ _ (QualifiedName _mod ident)) = ident
 
 -- data Fixity = Fixity Assoc (Maybe Precedence) GlobalName
 -- data Assoc = AssocNone | AssocLeft | AssocRight
@@ -84,7 +84,8 @@ data ScopedName = ScopedName Source GlobalName
 
 data ScopeError
     = ENotInScope QualifiedName RNamespace
-    | EAmbiguous [ScopedName]
+    | EAmbiguous SrcSpanInfo [ScopedName]
+    | EConflicting [ScopedName]
     | ETypeAsClass
     | ENotExported
     | EModNotFound
@@ -105,7 +106,7 @@ data Scope = Scope
     --      Sigh.
     , scopeTyVars :: Map QualifiedName [ScopedName]
     , scopeValues :: Map QualifiedName [ScopedName]
-    , scopeErrors :: [(SrcSpanInfo, ScopeError)]
+    , scopeErrors :: [ScopeError]
     }
 instance Monoid Scope where
     mempty = Scope
@@ -114,12 +115,19 @@ instance Monoid Scope where
         , scopeValues       = Map.empty
         , scopeErrors       = [] }
     mappend a b = Scope
-        { scopeTypes      = scopeTypes a `Map.union` scopeTypes b
-        , scopeTyVars     = scopeTyVars a `Map.union` scopeTyVars b
+        { scopeTypes      = Map.unionWithKey check (scopeTypes a) (scopeTypes b)
+        , scopeTyVars     = Map.unionWithKey check (scopeTyVars a) (scopeTyVars b)
         , scopeValues     = Map.unionWithKey check (scopeValues a) (scopeValues b)
-        , scopeErrors     = scopeErrors a ++ scopeErrors b }
+        , scopeErrors     = conflictingValues ++ conflictingTypes ++
+                            scopeErrors a ++ scopeErrors b }
       where
         check _k a' b' = a' ++ b'
+        conflictingTypes =
+          [ EConflicting dups
+          | dups <- Map.elems (Map.intersectionWith (++) (scopeTypes a) (scopeTypes b)) ]
+        conflictingValues =
+          [ EConflicting dups
+          | dups <- Map.elems (Map.intersectionWith (++) (scopeValues a) (scopeValues b)) ]
 
 -- Join two scopes, names in the first scope will shadow names in the second.
 shadowJoin :: Scope -> Scope -> Scope
@@ -149,7 +157,7 @@ type Resolve a = a SrcSpanInfo -> Rename (a Origin)
 -----------------------------------------------------------
 -- Utilities
 
-runRename :: ResolveEnv -> Rename a -> ([(SrcSpanInfo,ScopeError)], a)
+runRename :: ResolveEnv -> Rename a -> ([ScopeError], a)
 runRename resolveEnv action = (scopeErrors scope, a)
   where
     (a, scope) = runWriter (runReaderT (unRename action) readerEnv)
@@ -210,7 +218,7 @@ withLimitedScope = undefined
 
 -- Run action without letting the tyVars escsape the scope.
 limitTyVarScope :: String -> Rename a -> Rename a
-limitTyVarScope loc action = pushLocation loc $ Rename $ ReaderT $ \readerEnv ->
+limitTyVarScope loc action = {-pushLocation loc $-} Rename $ ReaderT $ \readerEnv ->
     let scope = readerScope readerEnv
         inScope = scope{ scopeTyVars = scopeTyVars scope `Map.union` scopeTyVars nestedScope}
         (a, nestedScope) = runWriter $ runReaderT (unRename action) readerEnv{readerScope = inScope}
@@ -222,6 +230,13 @@ limitScope loc action = pushLocation loc $ Rename $ ReaderT $ \readerEnv ->
         inScope = (nestedScope `shadowJoin` scope){ scopeErrors = []}
         (a, nestedScope) = runWriter $ runReaderT (unRename action) readerEnv{readerScope = inScope}
     in WriterT $ Identity (a, mempty{ scopeErrors = scopeErrors nestedScope})
+
+restrictScope :: QualifiedName -> ScopedName -> Rename a -> Rename a
+restrictScope qname scopedName =
+  local $ \env ->
+    let s = readerScope env
+        s' = s{scopeValues = Map.adjust (const [scopedName]) qname (scopeValues s)}
+    in env{readerScope = s'}
 
 getNameIdentifier :: Name l -> String
 getNameIdentifier (Ident _ ident) = ident
