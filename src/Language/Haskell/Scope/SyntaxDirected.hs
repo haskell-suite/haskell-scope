@@ -584,35 +584,35 @@ resolveMatch match =
 
 resolveClassDecl :: Resolve ClassDecl
 resolveClassDecl decl =
-    case decl of
-        ClsDecl src sub ->
-          ClsDecl (Origin None src)
-            <$> resolveDecl ResolveClass sub
-        _ -> error "resolveClassDecl"
+  case decl of
+    ClsDecl src sub ->
+      ClsDecl (Origin None src)
+        <$> resolveDecl ResolveClass sub
+    _ -> error "resolveClassDecl"
 
 resolveFunDep :: Resolve FunDep
 resolveFunDep _dependency = error "resolveFunDep"
 
 resolveInstDecl :: Resolve InstDecl
 resolveInstDecl inst =
-    case inst of
-        InsDecl src decl ->
-            InsDecl (Origin None src)
-                <$> resolveDecl ResolveInstance decl
-        _ -> error "resolveInstDecl"
+  case inst of
+    InsDecl src decl ->
+      InsDecl (Origin None src)
+        <$> resolveDecl ResolveInstance decl
+    _ -> error "resolveInstDecl"
 
 resolveActivation :: Resolve Activation
 resolveActivation activation = pure $
-    case activation of
-        ActiveFrom src n -> ActiveFrom (Origin None src) n
-        ActiveUntil src n -> ActiveUntil (Origin None src) n
+  case activation of
+    ActiveFrom src n -> ActiveFrom (Origin None src) n
+    ActiveUntil src n -> ActiveUntil (Origin None src) n
 
 resolveAssoc :: Resolve Assoc
 resolveAssoc assoc = pure $
-    case assoc of
-        AssocNone src -> AssocNone (Origin None src)
-        AssocLeft src -> AssocLeft (Origin None src)
-        AssocRight src -> AssocRight (Origin None src)
+  case assoc of
+    AssocNone src -> AssocNone (Origin None src)
+    AssocLeft src -> AssocLeft (Origin None src)
+    AssocRight src -> AssocRight (Origin None src)
 
 resolveOp :: Resolve Op
 resolveOp op =
@@ -717,18 +717,18 @@ resolveModuleName (ModuleName src name) =
 
 resolveNamespace :: Resolve Namespace
 resolveNamespace ns = pure $
-    case ns of
-      NoNamespace src      -> NoNamespace (Origin None src)
-      TypeNamespace src    -> TypeNamespace (Origin None src)
-      PatternNamespace src -> PatternNamespace (Origin None src)
+  case ns of
+    NoNamespace src      -> NoNamespace (Origin None src)
+    TypeNamespace src    -> TypeNamespace (Origin None src)
+    PatternNamespace src -> PatternNamespace (Origin None src)
 
 resolveCName :: Resolve CName
 resolveCName cname =
-    case cname of
-      ConName src name ->
-        ConName (Origin None src) <$> resolveName NsValues name
-      VarName src name ->
-        VarName (Origin None src) <$> resolveName NsValues name
+  case cname of
+    ConName src name ->
+      ConName (Origin None src) <$> resolveName NsValues name
+    VarName src name ->
+      VarName (Origin None src) <$> resolveName NsValues name
 
 resolveEWildcard :: Resolve EWildcard
 resolveEWildcard wildcard =
@@ -738,56 +738,56 @@ resolveEWildcard wildcard =
 
 resolveExportSpec :: Resolve ExportSpec
 resolveExportSpec spec =
-    case spec of
-        EAbs src ns qname ->
-            EAbs (Origin None src) <$> resolveNamespace ns <*> resolveQName NsTypes qname
-        EVar src qname ->
-            EVar (Origin None src)
-                -- <$> resolveNamespace ns
-                <$> resolveQName NsValues qname
-        EThingWith src wild qname cnames ->
-            EThingWith (Origin None src)
-                <$> resolveEWildcard wild
-                <*> resolveQName NsTypes qname
-                <*> mapM resolveCName cnames
-        _ -> error $ "resolveExportSpec: " ++ prettyPrint spec
+  case spec of
+    EAbs src ns qname ->
+      EAbs (Origin None src) <$> resolveNamespace ns <*> resolveQName NsTypes qname
+    EVar src qname ->
+      EVar (Origin None src)
+        -- <$> resolveNamespace ns
+        <$> resolveQName NsValues qname
+    EThingWith src wild qname cnames ->
+      EThingWith (Origin None src)
+        <$> resolveEWildcard wild
+        <*> resolveQName NsTypes qname
+        <*> mapM resolveCName cnames
+    _ -> error $ "resolveExportSpec: " ++ prettyPrint spec
 
 resolveExportSpecList :: Resolve ExportSpecList
 resolveExportSpecList list =
-    case list of
-        ExportSpecList src exports ->
-            ExportSpecList (Origin None src)
-                <$> mapM resolveExportSpec exports
+  case list of
+    ExportSpecList src exports ->
+      ExportSpecList (Origin None src)
+        <$> mapM resolveExportSpec exports
 
 resolveModuleHead :: Resolve ModuleHead
 resolveModuleHead (ModuleHead src name mbWarn mbExport) =
-    ModuleHead (Origin None src)
-        <$> resolveModuleName name
-        <*> resolveMaybe undefined mbWarn
-        <*> resolveMaybe resolveExportSpecList mbExport
+  ModuleHead (Origin None src)
+      <$> resolveModuleName name
+      <*> resolveMaybe undefined mbWarn
+      <*> resolveMaybe resolveExportSpecList mbExport
 
 resolveModulePragma :: Resolve ModulePragma
 resolveModulePragma pragma =
     case pragma of
-        LanguagePragma src names ->
-            pure $ LanguagePragma (Origin None src) (map scope names)
-        _ -> error "resolveModulePragma"
+      LanguagePragma src names ->
+        pure $ LanguagePragma (Origin None src) (map scope names)
+      _ -> error "resolveModulePragma"
   where
     scope (Ident src ident) = Ident (Origin None src) ident
     scope (Symbol src symbol) = Symbol (Origin None src) symbol
 
 resolveImportSpec :: Resolve ImportSpec
 resolveImportSpec spec =
-    case spec of
-        IVar src name ->
-            IVar (Origin None src)
-                <$> resolveName NsValues name
-        _ -> error "Language.Haskell.Scope.resolveImportSpec"
+  case spec of
+    IVar src name ->
+      IVar (Origin None src)
+        <$> resolveName NsValues name
+    _ -> error "Language.Haskell.Scope.resolveImportSpec"
 
 resolveImportSpecList :: Resolve ImportSpecList
 resolveImportSpecList (ImportSpecList src bool specs) =
-    ImportSpecList (Origin None src) bool
-        <$> mapM resolveImportSpec specs
+  ImportSpecList (Origin None src) bool
+    <$> mapM resolveImportSpec specs
 
 bindImports :: ImportDecl Origin -> Rename ()
 bindImports ImportDecl{..} = do
@@ -798,16 +798,16 @@ bindImports ImportDecl{..} = do
 
 resolveImportDecl :: Resolve ImportDecl
 resolveImportDecl ImportDecl{..} = do
-    decl <- ImportDecl (Origin None importAnn)
-        <$> resolveModuleName importModule
-        <*> pure importQualified
-        <*> pure importSrc
-        <*> pure importSafe
-        <*> pure importPkg
-        <*> resolveMaybe resolveModuleName importAs
-        <*> resolveMaybe resolveImportSpecList importSpecs
-    bindImports decl
-    return decl
+  decl <- ImportDecl (Origin None importAnn)
+      <$> resolveModuleName importModule
+      <*> pure importQualified
+      <*> pure importSrc
+      <*> pure importSafe
+      <*> pure importPkg
+      <*> resolveMaybe resolveModuleName importAs
+      <*> resolveMaybe resolveImportSpecList importSpecs
+  bindImports decl
+  return decl
 
 moduleHeadLocation :: Maybe (ModuleHead a) -> String
 moduleHeadLocation Nothing = "Main"
@@ -816,12 +816,12 @@ moduleHeadLocation (Just (ModuleHead _ (ModuleName _ name) _warns _exports)) =
 
 resolveModule :: Resolve Module
 resolveModule m =
-    case m of
-        Module src mhead pragma imports decls ->
-            pushLocation (moduleHeadLocation mhead) $
-            Module (Origin None src)
-                <$> resolveMaybe resolveModuleHead mhead
-                <*> mapM resolveModulePragma pragma
-                <*> mapM resolveImportDecl imports
-                <*> mapMWithLocation "decl" (resolveDecl ResolveToplevel) decls
-        _ -> error "resolveModule"
+  case m of
+    Module src mhead pragma imports decls ->
+      pushLocation (moduleHeadLocation mhead) $
+      Module (Origin None src)
+          <$> resolveMaybe resolveModuleHead mhead
+          <*> mapM resolveModulePragma pragma
+          <*> mapM resolveImportDecl imports
+          <*> mapMWithLocation "decl" (resolveDecl ResolveToplevel) decls
+    _ -> error "resolveModule"
