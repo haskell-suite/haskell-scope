@@ -584,7 +584,10 @@ resolveClassDecl decl =
     _ -> error "resolveClassDecl"
 
 resolveFunDep :: Resolve FunDep
-resolveFunDep _dependency = error "resolveFunDep"
+resolveFunDep (FunDep src lhs rhs) =
+  FunDep (Origin None src)
+    <$> mapM (resolveName NsTypeVariables) lhs
+    <*> mapM (resolveName NsTypeVariables) rhs
 
 resolveInstDecl :: Resolve InstDecl
 resolveInstDecl inst =

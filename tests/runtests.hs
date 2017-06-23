@@ -76,7 +76,8 @@ unitTests =
     , scopeTest "Haskell2010/Type"
     ]
   , testGroup "Extensions"
-    [ scopeTest "Extensions/MagicHash" ]
+    [ scopeTest "Extensions/MagicHash"
+    , scopeTest "Extensions/FunctionalDependencies" ]
   , testGroup "Known issues"
     [ scopeTest "Instance4"
     , scopeTest "Records2" ]

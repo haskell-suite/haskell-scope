@@ -1,0 +1,31 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from FunctionalDependencies.decl0:
+    class [4mFunDep1[0m a b | a -> b
+  Definition 2, from FunctionalDependencies.decl0:
+    class FunDep1 [4ma[0m b | a -> b
+  Definition 3, from FunctionalDependencies.decl0:
+    class FunDep1 a [4mb[0m | a -> b
+  Definition 4, from FunctionalDependencies.decl1:
+    class [4mFunDep2[0m a | -> a
+  Definition 5, from FunctionalDependencies.decl1:
+    class FunDep2 [4ma[0m | -> a
+  Definition 6, from FunctionalDependencies.decl2:
+    class [4mFunDep3[0m a b | -> a b
+  Definition 7, from FunctionalDependencies.decl2:
+    class FunDep3 [4ma[0m b | -> a b
+  Definition 8, from FunctionalDependencies.decl2:
+    class FunDep3 a [4mb[0m | -> a b
+
+Use sites:
+  Definition used: 2
+    class FunDep1 a b | [4ma[0m -> b
+  Definition used: 3
+    class FunDep1 a b | a -> [4mb[0m
+  Definition used: 5
+    class FunDep2 a | -> [4ma[0m
+  Definition used: 7
+    class FunDep3 a b | -> [4ma[0m b
+  Definition used: 8
+    class FunDep3 a b | -> a [4mb[0m
