@@ -1,0 +1,65 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from MultiParamTypeClasses.decl0:
+    class [4mHasBounds[0m a
+  Definition 2, from MultiParamTypeClasses.decl0:
+    class HasBounds [4ma[0m
+  Definition 3, from MultiParamTypeClasses.decl1:
+    class [4mMonad[0m m
+  Definition 4, from MultiParamTypeClasses.decl1:
+    class Monad [4mm[0m
+  Definition 5, from MultiParamTypeClasses.decl2:
+    data [4mArray[0m
+  Definition 6, from MultiParamTypeClasses.decl3:
+    data [4mUArray[0m
+  Definition 7, from MultiParamTypeClasses.decl4:
+    data [4mBool[0m
+  Definition 8, from MultiParamTypeClasses.decl5:
+    data [4mChar[0m
+  Definition 9, from MultiParamTypeClasses.decl6:
+    class HasBounds a => [4mIArray[0m a e
+  Definition 10, from MultiParamTypeClasses.decl6:
+    class HasBounds a => IArray [4ma[0m e
+  Definition 11, from MultiParamTypeClasses.decl6:
+    class HasBounds a => IArray a [4me[0m
+  Definition 12, from MultiParamTypeClasses.decl7:
+    class (HasBounds a, Monad m) => [4mMArray[0m a e m
+  Definition 13, from MultiParamTypeClasses.decl7:
+    class (HasBounds a, Monad m) => MArray [4ma[0m e m
+  Definition 14, from MultiParamTypeClasses.decl7:
+    class (HasBounds a, Monad m) => MArray a [4me[0m m
+  Definition 15, from MultiParamTypeClasses.decl7:
+    class (HasBounds a, Monad m) => MArray a e [4mm[0m
+
+Use sites:
+  Definition used: 1
+    class [4mHasBounds[0m a => IArray a e
+  Definition used: 10
+    class HasBounds [4ma[0m => IArray a e
+  Definition used: 1
+    class ([4mHasBounds[0m a, Monad m) => MArray a e m
+  Definition used: 13
+    class (HasBounds [4ma[0m, Monad m) => MArray a e m
+  Definition used: 3
+    class (HasBounds a, [4mMonad[0m m) => MArray a e m
+  Definition used: 15
+    class (HasBounds a, Monad [4mm[0m) => MArray a e m
+  Definition used: 9
+    instance [4mIArray[0m Array e
+  Definition used: 5
+    instance IArray [4mArray[0m e
+  Definition used: MultiParamTypeClasses.decl8.tv
+    instance IArray Array [4me[0m
+  Definition used: 9
+    instance [4mIArray[0m UArray Bool
+  Definition used: 6
+    instance IArray [4mUArray[0m Bool
+  Definition used: 7
+    instance IArray UArray [4mBool[0m
+  Definition used: 9
+    instance [4mIArray[0m UArray Char
+  Definition used: 6
+    instance IArray [4mUArray[0m Char
+  Definition used: 8
+    instance IArray UArray [4mChar[0m

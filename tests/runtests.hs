@@ -77,7 +77,8 @@ unitTests =
     ]
   , testGroup "Extensions"
     [ scopeTest "Extensions/MagicHash"
-    , scopeTest "Extensions/FunctionalDependencies" ]
+    , scopeTest "Extensions/FunctionalDependencies"
+    , scopeTest "Extensions/MultiParamTypeClasses" ]
   , testGroup "Known issues"
     [ scopeTest "Instance4"
     , scopeTest "Records2" ]
