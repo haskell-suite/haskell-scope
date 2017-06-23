@@ -1,0 +1,21 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from DeclTypeSig.decl1:
+    [4ma[0m = ()
+  Definition 2, from DeclTypeSig.decl3:
+    ([4mb[0m,c,d) = ()
+  Definition 3, from DeclTypeSig.decl3:
+    (b,[4mc[0m,d) = ()
+  Definition 4, from DeclTypeSig.decl3:
+    (b,c,[4md[0m) = ()
+
+Use sites:
+  Definition used: 1
+    [4ma[0m :: ()
+  Definition used: 2
+    [4mb[0m, c, d :: ()
+  Definition used: 3
+    b, [4mc[0m, d :: ()
+  Definition used: 4
+    b, c, [4md[0m :: ()

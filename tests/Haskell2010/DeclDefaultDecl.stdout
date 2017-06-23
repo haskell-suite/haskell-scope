@@ -1,0 +1,13 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from DeclDefault.decl0:
+    data [4mA[0m
+  Definition 2, from DeclDefault.decl1:
+    data [4mB[0m
+
+Use sites:
+  Definition used: 1
+    default ([4mA[0m,B)
+  Definition used: 2
+    default (A,[4mB[0m)

@@ -1,0 +1,39 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from DeclTypeDecl.decl0:
+    type [4mDHead[0m = ()
+  Definition 2, from DeclTypeDecl.decl1:
+    type [4ma[0m `Infix1` b = Infix2 a b
+  Definition 3, from DeclTypeDecl.decl1:
+    type a `[4mInfix1[0m` b = Infix2 a b
+  Definition 4, from DeclTypeDecl.decl1:
+    type a `Infix1` [4mb[0m = Infix2 a b
+  Definition 5, from DeclTypeDecl.decl2:
+    type [4ma[0m `Infix2` b = Infix1 a b
+  Definition 6, from DeclTypeDecl.decl2:
+    type a `[4mInfix2[0m` b = Infix1 a b
+  Definition 7, from DeclTypeDecl.decl2:
+    type a `Infix2` [4mb[0m = Infix1 a b
+  Definition 8, from DeclTypeDecl.decl3:
+    type ([4mParens[0m) a = DHead a
+  Definition 9, from DeclTypeDecl.decl3:
+    type (Parens) [4ma[0m = DHead a
+
+Use sites:
+  Definition used: 6
+    type a `Infix1` b = [4mInfix2[0m a b
+  Definition used: 2
+    type a `Infix1` b = Infix2 [4ma[0m b
+  Definition used: 4
+    type a `Infix1` b = Infix2 a [4mb[0m
+  Definition used: 3
+    type a `Infix2` b = [4mInfix1[0m a b
+  Definition used: 5
+    type a `Infix2` b = Infix1 [4ma[0m b
+  Definition used: 7
+    type a `Infix2` b = Infix1 a [4mb[0m
+  Definition used: 1
+    type (Parens) a = [4mDHead[0m a
+  Definition used: 9
+    type (Parens) a = DHead [4ma[0m

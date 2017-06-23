@@ -1,0 +1,233 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from Exp.decl0:
+    data [4mBool[0m = True | False
+  Definition 2, from Exp.decl0:
+    data Bool = [4mTrue[0m | False
+  Definition 3, from Exp.decl0:
+    data Bool = True | [4mFalse[0m
+  Definition 4, from Exp.decl1:
+    data [4mRecord[0m = Record {field1 :: Bool, field2 :: ()}
+  Definition 5, from Exp.decl1:
+    data Record = [4mRecord[0m {field1 :: Bool, field2 :: ()}
+  Definition 6, from Exp.decl1:
+    data Record = Record {[4mfield1[0m :: Bool, field2 :: ()}
+  Definition 7, from Exp.decl1:
+    data Record = Record {field1 :: Bool, [4mfield2[0m :: ()}
+  Definition 8, from Exp.decl2:
+    data [4mInt[0m
+  Definition 9, from Exp.decl3:
+    [4mvar[0m = var
+  Definition 10, from Exp.decl4:
+    [4mcon[0m = True
+  Definition 11, from Exp.decl5:
+    [4mlitChar[0m = 'c'
+  Definition 12, from Exp.decl6:
+    [4mlitString[0m = "string"
+  Definition 13, from Exp.decl7:
+    [4mlitInt[0m = 10
+  Definition 14, from Exp.decl8:
+    [4mlitFrac[0m = 3.14159
+  Definition 15, from Exp.decl9:
+    [4minfixApp a b = a + b[0m
+  Definition 16, from Exp.decl9.match0:
+    infixApp [4ma[0m b = a + b
+  Definition 17, from Exp.decl9.match0:
+    infixApp a [4mb[0m = a + b
+  Definition 18, from Exp.decl10:
+    [4ma + b = a `infixApp` b[0m
+  Definition 19, from Exp.decl10.match0:
+    [4ma[0m + b = a `infixApp` b
+  Definition 20, from Exp.decl10.match0:
+    a + [4mb[0m = a `infixApp` b
+  Definition 21, from Exp.decl11:
+    [4mprefixApp a b = (+) a b[0m
+  Definition 22, from Exp.decl11.match0:
+    prefixApp [4ma[0m b = (+) a b
+  Definition 23, from Exp.decl11.match0:
+    prefixApp a [4mb[0m = (+) a b
+  Definition 24, from Exp.decl12:
+    [4mapp[0m = app app
+  Definition 25, from Exp.decl13:
+    [4mnegApp[0m = -negApp
+  Definition 26, from Exp.decl14:
+    [4mlambda[0m = \x -> x
+  Definition 27, from Exp.decl14.rhs.lambda:
+    lambda = \[4mx[0m -> x
+  Definition 28, from Exp.decl15:
+    [4mletexpr[0m = let x = x in x
+  Definition 29, from Exp.decl15.rhs.let.binds0:
+    letexpr = let [4mx[0m = x in x
+  Definition 30, from Exp.decl16:
+    [4mifexpr[0m = if True then False else True
+  Definition 31, from Exp.decl17:
+    [4mcasexpr[0m = case True of True -> False; False -> True
+  Definition 32, from Exp.decl18:
+    [4mdoexpr[0m = do x <- var -- #1
+  Definition 33, from Exp.decl18.rhs.stmt0:
+    doexpr = do [4mx[0m <- var -- #1
+  Definition 34, from Exp.decl18.rhs.stmt1.binds0:
+                let [4mx_[0m = x
+  Definition 35, from Exp.decl18.rhs.stmt2:
+                [4mx[0m <- var -- #2
+  Definition 36, from Exp.decl18.rhs.stmt3:
+                [4my[0m <- var
+  Definition 37, from Exp.decl18.rhs.stmt4.binds0:
+                let [4mz[0m = x y
+  Definition 38, from Exp.decl19:
+    [4mtuple[0m = (tuple, tuple)
+  Definition 39, from Exp.decl20:
+    [4mlist[0m = [list, list]
+  Definition 40, from Exp.decl21:
+    [4mparen[0m = (paren)
+  Definition 41, from Exp.decl22:
+    [4mrecConstr[0m = Record{ field1 = True, field2 = () }
+  Definition 42, from Exp.decl23:
+    [4mrecUpdate[0m = recConstr{ field1 = False }
+  Definition 43, from Exp.decl24:
+    [4menumfrom[0m = [1..]
+  Definition 44, from Exp.decl25:
+    [4menumfromto[0m = [1..10]
+  Definition 45, from Exp.decl26:
+    [4menumfromthen[0m = [1, 10 ..]
+  Definition 46, from Exp.decl27:
+    [4menumfromthento[0m = [1, 10 .. 100]
+  Definition 47, from Exp.decl28:
+    [4mlistcomp[0m = [ y | x <- enumfrom, True, con, let y = x+y, let y = x+y ]
+  Definition 48, from Exp.decl28.rhs.comp0:
+    listcomp = [ y | [4mx[0m <- enumfrom, True, con, let y = x+y, let y = x+y ]
+  Definition 49, from Exp.decl28.rhs.comp3.binds0:
+    listcomp = [ y | x <- enumfrom, True, con, let [4my[0m = x+y, let y = x+y ]
+  Definition 50, from Exp.decl28.rhs.comp4.binds0:
+    listcomp = [ y | x <- enumfrom, True, con, let y = x+y, let [4my[0m = x+y ]
+  Definition 51, from Exp.decl29:
+    [4mexplicitTypeSig[0m = litInt :: Int
+
+Use sites:
+  Definition used: 1
+    data Record = Record {field1 :: [4mBool[0m, field2 :: ()}
+  Definition used: 9
+    var = [4mvar[0m
+  Definition used: 2
+    con = [4mTrue[0m
+  Definition used: 15
+    [4minfixApp[0m a b = a + b
+  Definition used: 16
+    infixApp a b = [4ma[0m + b
+  Definition used: 18
+    infixApp a b = a [4m+[0m b
+  Definition used: 17
+    infixApp a b = a + [4mb[0m
+  Definition used: 18
+    a [4m+[0m b = a `infixApp` b
+  Definition used: 19
+    a + b = [4ma[0m `infixApp` b
+  Definition used: 15
+    a + b = a `[4minfixApp[0m` b
+  Definition used: 20
+    a + b = a `infixApp` [4mb[0m
+  Definition used: 21
+    [4mprefixApp[0m a b = (+) a b
+  Definition used: 18
+    prefixApp a b = ([4m+[0m) a b
+  Definition used: 22
+    prefixApp a b = (+) [4ma[0m b
+  Definition used: 23
+    prefixApp a b = (+) a [4mb[0m
+  Definition used: 24
+    app = [4mapp[0m app
+  Definition used: 24
+    app = app [4mapp[0m
+  Definition used: 25
+    negApp = -[4mnegApp[0m
+  Definition used: 27
+    lambda = \x -> [4mx[0m
+  Definition used: 29
+    letexpr = let x = [4mx[0m in x
+  Definition used: 29
+    letexpr = let x = x in [4mx[0m
+  Definition used: 2
+    ifexpr = if [4mTrue[0m then False else True
+  Definition used: 3
+    ifexpr = if True then [4mFalse[0m else True
+  Definition used: 2
+    ifexpr = if True then False else [4mTrue[0m
+  Definition used: 2
+    casexpr = case [4mTrue[0m of True -> False; False -> True
+  Definition used: 2
+    casexpr = case True of [4mTrue[0m -> False; False -> True
+  Definition used: 3
+    casexpr = case True of True -> [4mFalse[0m; False -> True
+  Definition used: 3
+    casexpr = case True of True -> False; [4mFalse[0m -> True
+  Definition used: 2
+    casexpr = case True of True -> False; False -> [4mTrue[0m
+  Definition used: 9
+    doexpr = do x <- [4mvar[0m -- #1
+  Definition used: 33
+                let x_ = [4mx[0m
+  Definition used: 9
+                x <- [4mvar[0m -- #2
+  Definition used: 9
+                y <- [4mvar[0m
+  Definition used: 35
+                let z = [4mx[0m y
+  Definition used: 36
+                let z = x [4my[0m
+  Definition used: 35
+                [4mx[0m y z x_
+  Definition used: 36
+                x [4my[0m z x_
+  Definition used: 37
+                x y [4mz[0m x_
+  Definition used: 34
+                x y z [4mx_[0m
+  Definition used: 38
+    tuple = ([4mtuple[0m, tuple)
+  Definition used: 38
+    tuple = (tuple, [4mtuple[0m)
+  Definition used: 39
+    list = [[4mlist[0m, list]
+  Definition used: 39
+    list = [list, [4mlist[0m]
+  Definition used: 40
+    paren = ([4mparen[0m)
+  Definition used: 5
+    recConstr = [4mRecord[0m{ field1 = True, field2 = () }
+  Definition used: 6
+    recConstr = Record{ [4mfield1[0m = True, field2 = () }
+  Definition used: 2
+    recConstr = Record{ field1 = [4mTrue[0m, field2 = () }
+  Definition used: 7
+    recConstr = Record{ field1 = True, [4mfield2[0m = () }
+  Definition used: 41
+    recUpdate = [4mrecConstr[0m{ field1 = False }
+  Definition used: 6
+    recUpdate = recConstr{ [4mfield1[0m = False }
+  Definition used: 3
+    recUpdate = recConstr{ field1 = [4mFalse[0m }
+  Definition used: 50
+    listcomp = [ [4my[0m | x <- enumfrom, True, con, let y = x+y, let y = x+y ]
+  Definition used: 43
+    listcomp = [ y | x <- [4menumfrom[0m, True, con, let y = x+y, let y = x+y ]
+  Definition used: 2
+    listcomp = [ y | x <- enumfrom, [4mTrue[0m, con, let y = x+y, let y = x+y ]
+  Definition used: 10
+    listcomp = [ y | x <- enumfrom, True, [4mcon[0m, let y = x+y, let y = x+y ]
+  Definition used: 48
+    listcomp = [ y | x <- enumfrom, True, con, let y = [4mx[0m+y, let y = x+y ]
+  Definition used: 18
+    listcomp = [ y | x <- enumfrom, True, con, let y = x[4m+[0my, let y = x+y ]
+  Definition used: 49
+    listcomp = [ y | x <- enumfrom, True, con, let y = x+[4my[0m, let y = x+y ]
+  Definition used: 48
+    listcomp = [ y | x <- enumfrom, True, con, let y = x+y, let y = [4mx[0m+y ]
+  Definition used: 18
+    listcomp = [ y | x <- enumfrom, True, con, let y = x+y, let y = x[4m+[0my ]
+  Definition used: 50
+    listcomp = [ y | x <- enumfrom, True, con, let y = x+y, let y = x+[4my[0m ]
+  Definition used: 13
+    explicitTypeSig = [4mlitInt[0m :: Int
+  Definition used: 8
+    explicitTypeSig = litInt :: [4mInt[0m

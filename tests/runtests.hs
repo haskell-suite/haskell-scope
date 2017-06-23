@@ -60,10 +60,22 @@ unitTests =
   , scopeTest "Where6"
   , scopeTest "Infix1"
   , scopeTest "BuiltIn1"
+  , scopeTest "Error1"
+  , scopeTest "Records1"
+  , testGroup "Haskell2010"
+    [ scopeTest "Haskell2010/Exp"
+    , scopeTest "Haskell2010/ModuleNoHead"
+    , scopeTest "Haskell2010/ModuleNoExports"
+    , scopeTest "Haskell2010/DeclDataDecl"
+    , scopeTest "Haskell2010/DeclDefaultDecl"
+    , scopeTest "Haskell2010/DeclForImp"
+    , scopeTest "Haskell2010/DeclFunBind"
+    , scopeTest "Haskell2010/DeclPatBind"
+    , scopeTest "Haskell2010/DeclTypeDecl"
+    , scopeTest "Haskell2010/DeclTypeSig"
+    ]
   , testGroup "Known issues"
-    [ scopeTest "Error1"
-    , scopeTest "Instance4"
-    , scopeTest "Records1"
+    [ scopeTest "Instance4"
     , scopeTest "Records2" ]
   ]
 

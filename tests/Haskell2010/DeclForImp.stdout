@@ -1,0 +1,43 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from DeclForImp.decl0:
+    foreign import stdcall          [4mvoid1[0m :: ()
+  Definition 2, from DeclForImp.decl1:
+    foreign import ccall            [4mvoid2[0m :: ()
+  Definition 3, from DeclForImp.decl2:
+    foreign import cplusplus        [4mvoid3[0m :: ()
+  Definition 4, from DeclForImp.decl3:
+    foreign import jvm              [4mvoid4[0m :: ()
+  Definition 5, from DeclForImp.decl4:
+    foreign import dotnet           [4mvoid5[0m :: ()
+  Definition 6, from DeclForImp.decl5:
+    foreign import ccall unsafe     [4mvoid6[0m :: ()
+  Definition 7, from DeclForImp.decl6:
+    foreign import ccall safe       [4mvoid7[0m :: ()
+  Definition 8, from DeclForImp.decl7:
+    foreign import ccall threadsafe [4mvoid8[0m :: ()
+  Definition 9, from DeclForImp.decl8:
+    foreign import ccall "void9"    [4mvoid9[0m :: ()
+  Definition 10, from DeclForImp.decl9:
+    [4mcollection[0m = [void1,void2,void3,void4,void5
+
+Use sites:
+  Definition used: 1
+    collection = [[4mvoid1[0m,void2,void3,void4,void5
+  Definition used: 2
+    collection = [void1,[4mvoid2[0m,void3,void4,void5
+  Definition used: 3
+    collection = [void1,void2,[4mvoid3[0m,void4,void5
+  Definition used: 4
+    collection = [void1,void2,void3,[4mvoid4[0m,void5
+  Definition used: 5
+    collection = [void1,void2,void3,void4,[4mvoid5[0m
+  Definition used: 6
+                 ,[4mvoid6[0m,void7,void8,void9]
+  Definition used: 7
+                 ,void6,[4mvoid7[0m,void8,void9]
+  Definition used: 8
+                 ,void6,void7,[4mvoid8[0m,void9]
+  Definition used: 9
+                 ,void6,void7,void8,[4mvoid9[0m]

@@ -1,0 +1,71 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from DeclPatBind.decl0:
+    data [4mBool[0m = True | False
+  Definition 2, from DeclPatBind.decl0:
+    data Bool = [4mTrue[0m | False
+  Definition 3, from DeclPatBind.decl0:
+    data Bool = True | [4mFalse[0m
+  Definition 4, from DeclPatBind.decl1:
+    data [4mMaybe[0m a = Just a | Nothing
+  Definition 5, from DeclPatBind.decl1:
+    data Maybe [4ma[0m = Just a | Nothing
+  Definition 6, from DeclPatBind.decl1:
+    data Maybe a = [4mJust[0m a | Nothing
+  Definition 7, from DeclPatBind.decl1:
+    data Maybe a = Just a | [4mNothing[0m
+  Definition 8, from DeclPatBind.decl3:
+    Just [4ma[0m = a
+  Definition 9, from DeclPatBind.decl4:
+    Just [4mb[0m = c
+  Definition 10, from DeclPatBind.decl4.rhs.binds0:
+      where [4mc[0m = b
+  Definition 11, from DeclPatBind.decl6:
+    [4md[0m `Nothing` e = ()
+  Definition 12, from DeclPatBind.decl6:
+    d `Nothing` [4me[0m = ()
+
+Use sites:
+  Definition used: 5
+    data Maybe a = Just [4ma[0m | Nothing
+  Definition used: 2
+    [4mTrue[0m = False
+  Definition used: 3
+    True = [4mFalse[0m
+  Definition used: 6
+    [4mJust[0m a = a
+  Definition used: 8
+    Just a = [4ma[0m
+  Definition used: 6
+    [4mJust[0m b = c
+  Definition used: 10
+    Just b = [4mc[0m
+  Definition used: 9
+      where c = [4mb[0m
+  Definition used: 6
+    [4mJust[0m (Just (Just Nothing)) = Nothing
+  Definition used: 6
+    Just ([4mJust[0m (Just Nothing)) = Nothing
+  Definition used: 6
+    Just (Just ([4mJust[0m Nothing)) = Nothing
+  Definition used: 7
+    Just (Just (Just [4mNothing[0m)) = Nothing
+  Definition used: 7
+    Just (Just (Just Nothing)) = [4mNothing[0m
+  Definition used: 7
+    d `[4mNothing[0m` e = ()
+  Definition used: 2
+    [4mTrue[0m
+  Definition used: 8
+      | [4ma[0m = True
+  Definition used: 2
+      | a = [4mTrue[0m
+  Definition used: 7
+      | [4mNothing[0m = True
+  Definition used: 2
+      | Nothing = [4mTrue[0m
+  Definition used: 2
+      | [4mTrue[0m = False
+  Definition used: 3
+      | True = [4mFalse[0m

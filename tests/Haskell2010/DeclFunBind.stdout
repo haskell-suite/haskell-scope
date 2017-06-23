@@ -1,0 +1,143 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from DeclFunBind.decl0:
+    data [4mBool[0m = True | False
+  Definition 2, from DeclFunBind.decl0:
+    data Bool = [4mTrue[0m | False
+  Definition 3, from DeclFunBind.decl0:
+    data Bool = True | [4mFalse[0m
+  Definition 4, from DeclFunBind.decl1:
+    data [4mMaybe[0m a = Just a | Nothing
+  Definition 5, from DeclFunBind.decl1:
+    data Maybe [4ma[0m = Just a | Nothing
+  Definition 6, from DeclFunBind.decl1:
+    data Maybe a = [4mJust[0m a | Nothing
+  Definition 7, from DeclFunBind.decl1:
+    data Maybe a = Just a | [4mNothing[0m
+  Definition 8, from DeclFunBind.decl2:
+    [4mid a = a[0m
+  Definition 9, from DeclFunBind.decl2.match0:
+    id [4ma[0m = a
+  Definition 10, from DeclFunBind.decl3:
+    [4ma `infix1` b = ()[0m
+    [4ma `infix1` b = ()[0m
+    [4m  where c = a b[0m
+    [4ma `infix1` b[0m
+    [4m  | a = b[0m
+    [4m  | b = a[0m
+  Definition 11, from DeclFunBind.decl3.match0:
+    [4ma[0m `infix1` b = ()
+  Definition 12, from DeclFunBind.decl3.match0:
+    a `infix1` [4mb[0m = ()
+  Definition 13, from DeclFunBind.decl3.match1:
+    [4ma[0m `infix1` b = ()
+  Definition 14, from DeclFunBind.decl3.match1:
+    a `infix1` [4mb[0m = ()
+  Definition 15, from DeclFunBind.decl3.match1.rhs.binds0:
+      where [4mc[0m = a b
+  Definition 16, from DeclFunBind.decl3.match2:
+    [4ma[0m `infix1` b
+  Definition 17, from DeclFunBind.decl3.match2:
+    a `infix1` [4mb[0m
+  Definition 18, from DeclFunBind.decl4:
+    [4ma + b = ()[0m
+    [4mJust a + Just b = ()[0m
+  Definition 19, from DeclFunBind.decl4.match0:
+    [4ma[0m + b = ()
+  Definition 20, from DeclFunBind.decl4.match0:
+    a + [4mb[0m = ()
+  Definition 21, from DeclFunBind.decl4.match1:
+    Just [4ma[0m + Just b = ()
+  Definition 22, from DeclFunBind.decl4.match1:
+    Just a + Just [4mb[0m = ()
+  Definition 23, from DeclFunBind.decl5:
+    [4m(/) False = ()[0m
+    [4m(/) a = ()[0m
+  Definition 24, from DeclFunBind.decl5.match1:
+    (/) [4ma[0m = ()
+  Definition 25, from DeclFunBind.decl6:
+    [4m(//) False Nothing = ()[0m
+    [4m(//) a b = ()[0m
+  Definition 26, from DeclFunBind.decl6.match1:
+    (//) [4ma[0m b = ()
+  Definition 27, from DeclFunBind.decl6.match1:
+    (//) a [4mb[0m = ()
+  Definition 28, from DeclFunBind.decl7:
+    [4mFalse - False = ()[0m
+    [4ma - b = ()[0m
+  Definition 29, from DeclFunBind.decl7.match1:
+    [4ma[0m - b = ()
+  Definition 30, from DeclFunBind.decl7.match1:
+    a - [4mb[0m = ()
+  Definition 31, from DeclFunBind.decl8:
+    [4mnot True = False[0m
+    [4mnot False = True[0m
+
+Use sites:
+  Definition used: 5
+    data Maybe a = Just [4ma[0m | Nothing
+  Definition used: 8
+    [4mid[0m a = a
+  Definition used: 9
+    id a = [4ma[0m
+  Definition used: 10
+    a `[4minfix1[0m` b = ()
+  Definition used: 10
+    a `[4minfix1[0m` b = ()
+  Definition used: 13
+      where c = [4ma[0m b
+  Definition used: 14
+      where c = a [4mb[0m
+  Definition used: 10
+    a `[4minfix1[0m` b
+  Definition used: 16
+      | [4ma[0m = b
+  Definition used: 17
+      | a = [4mb[0m
+  Definition used: 17
+      | [4mb[0m = a
+  Definition used: 16
+      | b = [4ma[0m
+  Definition used: 18
+    a [4m+[0m b = ()
+  Definition used: 6
+    [4mJust[0m a + Just b = ()
+  Definition used: 18
+    Just a [4m+[0m Just b = ()
+  Definition used: 6
+    Just a + [4mJust[0m b = ()
+  Definition used: 23
+    ([4m/[0m) False = ()
+  Definition used: 3
+    (/) [4mFalse[0m = ()
+  Definition used: 23
+    ([4m/[0m) a = ()
+  Definition used: 25
+    ([4m//[0m) False Nothing = ()
+  Definition used: 3
+    (//) [4mFalse[0m Nothing = ()
+  Definition used: 7
+    (//) False [4mNothing[0m = ()
+  Definition used: 25
+    ([4m//[0m) a b = ()
+  Definition used: 3
+    [4mFalse[0m - False = ()
+  Definition used: 28
+    False [4m-[0m False = ()
+  Definition used: 3
+    False - [4mFalse[0m = ()
+  Definition used: 28
+    a [4m-[0m b = ()
+  Definition used: 31
+    [4mnot[0m True = False
+  Definition used: 2
+    not [4mTrue[0m = False
+  Definition used: 3
+    not True = [4mFalse[0m
+  Definition used: 31
+    [4mnot[0m False = True
+  Definition used: 3
+    not [4mFalse[0m = True
+  Definition used: 2
+    not False = [4mTrue[0m

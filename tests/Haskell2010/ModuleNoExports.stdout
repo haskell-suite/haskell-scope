@@ -1,0 +1,9 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from ModuleNoExports.decl0:
+    [4mmain[0m = main
+
+Use sites:
+  Definition used: 1
+    main = [4mmain[0m
