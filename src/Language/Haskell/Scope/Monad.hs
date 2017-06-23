@@ -83,7 +83,7 @@ data ScopedName = ScopedName Source GlobalName
     deriving ( Eq, Ord, Show )
 
 data ScopeError
-    = ENotInScope QualifiedName RNamespace
+    = ENotInScope SrcSpanInfo QualifiedName RNamespace
     | EAmbiguous SrcSpanInfo [ScopedName]
     | EConflicting [ScopedName]
     | ETypeAsClass
@@ -149,6 +149,32 @@ newtype Rename a = Rename { unRename :: ReaderT ReaderEnv (Writer Scope) a }
         ( Monad, MonadReader ReaderEnv, MonadWriter Scope
         , Functor, Applicative )
 
+-- newtype Rename2 a = Rename2 { unRename2 :: ResolveEnv -> Scope -> Location -> String -> (a, Scope) }
+-- instance Functor Rename2 where
+--   fmap fn r = Rename2 $ \env scope location m ->
+--                 let (a, scope) = unRename2 r env scope location m
+--                 in (fn a, scope)
+-- instance Applicative Rename2 where
+--   pure a = Rename2 $ \env s loc m -> (a, mempty)
+--   f <*> g = Rename2 $ \env s loc m ->
+--               let (fn, scope1) = unRename2 f env s loc m
+--                   (a, scope2) = unRename2 g env s loc m
+--               in (fn a, mappend scope1 scope2)
+-- instance Monad Rename2 where
+--   return = pure
+--   f >>= g = Rename2 $ \env s loc m ->
+--               let (a, scope1) = unRename2 f env s loc m
+--                   (b, scope2) = unRename2 (g a) env s loc m
+--               in (b, mappend scope1 scope2)
+--
+-- test_fn :: Maybe Int -> Rename2 String
+-- test_fn (Just val) = return (show val)
+-- test_fn Nothing = test_fn (Just undefined)
+
+-- instance MonadReader ReaderEnv Rename2 where
+--
+-- MonadReader ReaderEnv, MonadWriter Scope
+
 data ResolveContext = ResolveToplevel | ResolveClass | ResolveInstance
     deriving ( Show, Eq )
 
@@ -178,6 +204,12 @@ mapMWithLimit loc fn lst = mapM worker (zip [0::Int ..] lst)
   where
     worker (n, elt) = limitScope (loc ++ show n) (fn elt)
 
+numberedLocations :: String -> [Rename a] -> [Rename a]
+numberedLocations loc lst = map worker (zip [0::Int ..] lst)
+  where
+    worker (n, action) = pushLocation (loc ++ show n) action
+
+{-# INLINE mapMWithLocation #-}
 mapMWithLocation :: String -> (a -> Rename b) -> [a] -> Rename [b]
 mapMWithLocation loc fn lst = mapM worker (zip [0::Int ..] lst)
   where
@@ -230,6 +262,37 @@ limitScope loc action = pushLocation loc $ Rename $ ReaderT $ \readerEnv ->
         inScope = (nestedScope `shadowJoin` scope){ scopeErrors = []}
         (a, nestedScope) = runWriter $ runReaderT (unRename action) readerEnv{readerScope = inScope}
     in WriterT $ Identity (a, mempty{ scopeErrors = scopeErrors nestedScope})
+
+recursiveScope :: Rename a -> Rename a
+recursiveScope action = Rename $ ReaderT $ \readerEnv ->
+    let scope = readerScope readerEnv
+        inScope = (nestedScope `shadowJoin` scope){ scopeErrors = []}
+        (a, nestedScope) = runWriter $ runReaderT (unRename action) readerEnv{readerScope = inScope}
+    in WriterT $ Identity (a, nestedScope)
+
+
+shadowSequence :: [Rename a] -> Rename [a]
+shadowSequence lst = shadowSequence' pure [] [] lst
+
+withShadowSequence :: [Rename a] -> ([a] -> Rename b) -> Rename b
+withShadowSequence lst cont = shadowSequence' cont [] [] lst
+
+
+shadowSequence' :: ([a] -> Rename b) -> [[ScopeError]] -> [a] -> [Rename a] -> Rename b
+shadowSequence' cont errs acc lst = Rename $ ReaderT $ \readerEnv -> readerEnv `seq`
+  case lst of
+    [] -> runReaderT (unRename $ do
+                        tell mempty{scopeErrors = concat errs}
+                        cont (reverse acc))
+                      readerEnv
+    (x:xs) ->
+      case runWriter $ runReaderT (unRename x) readerEnv of
+        (x_ret, x_out) ->
+          let scope = readerScope readerEnv
+              inScope = (x_out `shadowJoin` scope)
+          in runReaderT
+                (unRename $ shadowSequence' cont (scopeErrors x_out:errs) (x_ret:acc) xs)
+                readerEnv{readerScope = inScope}
 
 restrictScope :: QualifiedName -> ScopedName -> Rename a -> Rename a
 restrictScope qname scopedName =

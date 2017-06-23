@@ -111,9 +111,11 @@ getScopeInfo file = do
 ppScopeError :: ScopeError -> String -> Doc
 ppScopeError err fileContent =
   case err of
-    ENotInScope _ NsTypes -> text "Type not in scope."
-    ENotInScope _ NsTypeVariables -> text "Type variable not in scope."
-    ENotInScope _ NsValues -> text "Value not in scope."
+    ENotInScope _ _ NsTypes -> text "Type not in scope."
+    ENotInScope _ _ NsTypeVariables -> text "Type variable not in scope."
+    ENotInScope loc _ NsValues ->
+      text "Value not in scope:" <$$>
+      ppLocation 2 fileContent loc
     EAmbiguous loc ambi ->
       text "Ambiguous:" <$$>
       indent 2

@@ -43,7 +43,7 @@ resolveName'' isTv qualification ns name =
                 Nothing ->
                     case isTv of
                         IsNotTv ->
-                            Left (ENotInScope qname ns)
+                            Left (ENotInScope src qname ns)
                         IsTv ->
                             Right (ScopedName LocalSource (GlobalName loc src qname))
                 Just [var] -> Right var
@@ -334,7 +334,7 @@ resolveSign sign = pure $
         Negative src -> Negative (Origin None src)
 
 resolvePat :: Resolve Pat
-resolvePat pat =
+resolvePat pat = ask >>= \env -> env `seq`
     case pat of
         PVar src name ->
             PVar (Origin None src)
@@ -382,12 +382,15 @@ resolveBinds binds =
         _ -> error "Language.Haskell.Scope.resolveBinds: undefined"
 
 resolveAlt :: Resolve Alt
-resolveAlt (Alt src pat rhs mbBinds) = do
-    pat' <- resolvePat pat
-    limitScope "branch" $
-        Alt (Origin None src) pat'
-            <$> resolveRhs rhs
-            <*> resolveMaybe resolveBinds mbBinds
+resolveAlt alt = do
+    env <- ask
+    env `seq` case alt of
+      (Alt src pat rhs mbBinds) -> do
+        pat' <- resolvePat pat
+        limitScope "branch" $
+            Alt (Origin None src) pat'
+                <$> resolveRhs rhs
+                <*> resolveMaybe resolveBinds mbBinds
 
 resolveQOp :: Resolve QOp
 resolveQOp qop =
@@ -418,26 +421,30 @@ resolveLiteral lit = pure $
 
 -- XXX: Support debindable syntax.
 resolveStmts :: [Stmt SrcSpanInfo] -> Rename [Stmt Origin]
-resolveStmts [] = return []
-resolveStmts (stmt:stmts) =
+resolveStmts = shadowSequence . numberedLocations "stmt" . map resolveStmt
+
+resolveQualStmt :: Resolve QualStmt
+resolveQualStmt qualStmt =
+  case qualStmt of
+    QualStmt src stmt ->
+      QualStmt (Origin None src)
+        <$> resolveStmt stmt
+    _ -> error $ "resolveQualStmt: " ++ prettyPrint qualStmt
+
+resolveStmt :: Resolve Stmt
+resolveStmt stmt =
   case stmt of
-    Generator src pat expr -> limitScope "gen" $
-      (:)
-        <$> (Generator (Origin None src)
+    Generator src pat expr ->
+      Generator (Origin None src)
                 <$> resolvePat pat
-                <*> limitScope "gen" (resolveExp expr))
-        <*> resolveStmts stmts
+                <*> limitScope "gen" (resolveExp expr)
     Qualifier src expr ->
-      (:)
-        <$> (Qualifier (Origin None src)
-                <$> limitScope "qual" (resolveExp expr))
-        <*> resolveStmts stmts
-    LetStmt src binds -> limitScope "let" $
-      (:)
-        <$> (LetStmt (Origin None src)
-                <$> resolveBinds binds )
-        <*> resolveStmts stmts
-    _ -> error $ "resolveStmts: " ++ prettyPrint stmt
+      Qualifier (Origin None src)
+                <$> limitScope "qual" (resolveExp expr)
+    LetStmt src binds -> recursiveScope $
+      LetStmt (Origin None src)
+                <$> resolveBinds binds
+    _ -> error $ "resolveStmt: " ++ prettyPrint stmt
 
 resolveFieldUpdate :: Resolve FieldUpdate
 resolveFieldUpdate upd =
@@ -452,18 +459,22 @@ resolveFieldUpdate upd =
     FieldWildcard src -> pure $ FieldWildcard (Origin None src)
 
 resolveExp :: Resolve Exp
-resolveExp expr =
+resolveExp expr = ask >>= \env -> env `seq`
   case expr of
-    Case src scrut alts ->
-      Case (Origin None src)
-        <$> resolveExp scrut
-        <*> mapMWithLimit "alt" resolveAlt alts
-    Con src qname ->
-      Con (Origin None src)
-        <$> resolveQName NsValues qname
     Var src qname ->
       Var (Origin None src)
         <$> resolveQName NsValues qname
+    Con src qname ->
+      Con (Origin None src)
+        <$> resolveQName NsValues qname
+    Lit src lit ->
+      Lit (Origin None src)
+        <$> resolveLiteral lit
+    InfixApp src a qop b ->
+      InfixApp (Origin None src)
+        <$> resolveExp a
+        <*> resolveQOp qop
+        <*> resolveExp b
     App src a b ->
       App (Origin None src)
         <$> resolveExp a
@@ -471,11 +482,32 @@ resolveExp expr =
     NegApp src sub ->
       NegApp (Origin None src)
         <$> resolveExp sub
-    InfixApp src a qop b ->
-      InfixApp (Origin None src)
-        <$> resolveExp a
-        <*> resolveQOp qop
-        <*> resolveExp b
+    Lambda src pats sub -> limitScope "lambda" $
+      Lambda (Origin None src)
+        <$> mapM resolvePat pats
+        <*> resolveExp sub
+    Let src binds inExpr -> limitScope "let" $
+      Let (Origin None src)
+        <$> resolveBinds binds
+        <*> resolveExp inExpr
+    If src if_e then_e else_e ->
+      If (Origin None src)
+        <$> resolveExp if_e
+        <*> resolveExp then_e
+        <*> resolveExp else_e
+    Case src scrut alts ->
+      Case (Origin None src)
+        <$> resolveExp scrut
+        <*> mapMWithLimit "alt" resolveAlt alts
+    Do src stmts ->
+      Do (Origin None src)
+        <$> resolveStmts stmts
+    Tuple src boxed exps ->
+      Tuple (Origin None src) boxed
+        <$> mapMWithLimit "tuple" resolveExp exps
+    List src exprs ->
+      List (Origin None src)
+        <$> mapMWithLimit "list" resolveExp exprs
     Paren src sub ->
       Paren (Origin None src)
         <$> resolveExp sub
@@ -504,31 +536,15 @@ resolveExp expr =
         <$> resolveExp from
         <*> resolveExp step
         <*> resolveExp to
-    Lambda src pats sub -> limitScope "lambda" $
-      Lambda (Origin None src)
-        <$> mapM resolvePat pats
-        <*> resolveExp sub
-    Lit src lit ->
-      Lit (Origin None src)
-        <$> resolveLiteral lit
-    Tuple src boxed exps ->
-      Tuple (Origin None src) boxed
-        <$> mapMWithLimit "tuple" resolveExp exps
-    Let src binds inExpr -> limitScope "let" $
-      Let (Origin None src)
-        <$> resolveBinds binds
-        <*> resolveExp inExpr
-    If src if_e then_e else_e ->
-      If (Origin None src)
-        <$> resolveExp if_e
-        <*> resolveExp then_e
-        <*> resolveExp else_e
-    List src exprs ->
-      List (Origin None src)
-        <$> mapMWithLimit "list" resolveExp exprs
-    Do src stmts ->
-      Do (Origin None src)
-        <$> resolveStmts stmts
+    ListComp src sub qualStmts ->
+      withShadowSequence (numberedLocations "comp" $ map resolveQualStmt qualStmts) $ \qualStmts' ->
+        ListComp (Origin None src)
+          <$> resolveExp sub
+          <*> pure qualStmts'
+    ExpTypeSig src sub ty ->
+      ExpTypeSig (Origin None src)
+        <$> resolveExp sub
+        <*> resolveType ty
     _ -> error $ "resolveExp: " ++ prettyPrint expr
 
 resolveGuardedRhs :: Resolve GuardedRhs
@@ -538,7 +554,7 @@ resolveGuardedRhs (GuardedRhs src stmts expr) =
     <*> resolveExp expr
 
 resolveRhs :: Resolve Rhs
-resolveRhs rhs =
+resolveRhs rhs = ask >>= \env -> env `seq`
   case rhs of
     UnGuardedRhs src expr ->
       UnGuardedRhs (Origin None src)
