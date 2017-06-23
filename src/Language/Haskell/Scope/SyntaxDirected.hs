@@ -735,18 +735,20 @@ resolveEWildcard wildcard =
 resolveExportSpec :: Resolve ExportSpec
 resolveExportSpec spec =
   case spec of
-    EAbs src ns qname ->
-      EAbs (Origin None src) <$> resolveNamespace ns <*> resolveQName NsTypes qname
     EVar src qname ->
       EVar (Origin None src)
         -- <$> resolveNamespace ns
         <$> resolveQName NsValues qname
+    EAbs src ns qname ->
+      EAbs (Origin None src) <$> resolveNamespace ns <*> resolveQName NsTypes qname
     EThingWith src wild qname cnames ->
       EThingWith (Origin None src)
         <$> resolveEWildcard wild
         <*> resolveQName NsTypes qname
         <*> mapM resolveCName cnames
-    _ -> error $ "resolveExportSpec: " ++ prettyPrint spec
+    EModuleContents src modName ->
+      EModuleContents (Origin None src)
+        <$> resolveModuleName modName
 
 resolveExportSpecList :: Resolve ExportSpecList
 resolveExportSpecList list =

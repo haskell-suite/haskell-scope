@@ -66,6 +66,7 @@ unitTests =
     [ scopeTest "Haskell2010/Exp"
     , scopeTest "Haskell2010/ModuleNoHead"
     , scopeTest "Haskell2010/ModuleNoExports"
+    , scopeTest "Haskell2010/ModuleExports"
     , scopeTest "Haskell2010/DeclDataDecl"
     , scopeTest "Haskell2010/DeclDefaultDecl"
     , scopeTest "Haskell2010/DeclForImp"
