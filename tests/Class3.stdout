@@ -1,21 +1,24 @@
 Scope errors:
+  Conflicting definitions:
+      [4mshowList[0m :: List a -> String
+      [4mshowList[0m = show
 
 Definitions:
-  Definition 1:
+  Definition 1, from Class3.decl0:
     data [4mString[0m
-  Definition 2:
+  Definition 2, from Class3.decl1:
     data [4mList[0m a
-  Definition 3:
+  Definition 3, from Class3.decl1:
     data List [4ma[0m
-  Definition 4:
+  Definition 4, from Class3.decl2:
     class [4mShow[0m a where
-  Definition 5:
+  Definition 5, from Class3.decl2:
     class Show [4ma[0m where
-  Definition 6:
+  Definition 6, from Class3.decl2:
       [4mshow[0m :: a -> String
-  Definition 7:
+  Definition 7, from Class3.decl2:
       [4mshowList[0m :: List a -> String
-  Definition 8:
+  Definition 8, from Class3.decl2:
       [4mshowList[0m = show
 
 Use sites:

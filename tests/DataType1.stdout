@@ -1,21 +1,21 @@
 Scope errors:
 
 Definitions:
-  Definition 1:
+  Definition 1, from DataType1.decl0:
     data [4mInt[0m
-  Definition 2:
+  Definition 2, from DataType1.decl1:
     data [4mData[0m a = Con1 a | Con2 Int | Con3 a Int | Con4 (Data a) | Con5 (Data Int)
-  Definition 3:
+  Definition 3, from DataType1.decl1:
     data Data [4ma[0m = Con1 a | Con2 Int | Con3 a Int | Con4 (Data a) | Con5 (Data Int)
-  Definition 4:
+  Definition 4, from DataType1.decl1:
     data Data a = [4mCon1[0m a | Con2 Int | Con3 a Int | Con4 (Data a) | Con5 (Data Int)
-  Definition 5:
+  Definition 5, from DataType1.decl1:
     data Data a = Con1 a | [4mCon2[0m Int | Con3 a Int | Con4 (Data a) | Con5 (Data Int)
-  Definition 6:
+  Definition 6, from DataType1.decl1:
     data Data a = Con1 a | Con2 Int | [4mCon3[0m a Int | Con4 (Data a) | Con5 (Data Int)
-  Definition 7:
+  Definition 7, from DataType1.decl1:
     data Data a = Con1 a | Con2 Int | Con3 a Int | [4mCon4[0m (Data a) | Con5 (Data Int)
-  Definition 8:
+  Definition 8, from DataType1.decl1:
     data Data a = Con1 a | Con2 Int | Con3 a Int | Con4 (Data a) | [4mCon5[0m (Data Int)
 
 Use sites:

@@ -1,13 +1,13 @@
 Scope errors:
 
 Definitions:
-  Definition 1:
+  Definition 1, from BuiltIn1.decl1:
     [4mx[0m = ()
-  Definition 2:
+  Definition 2, from BuiltIn1.decl3:
     [4my[0m = []
-  Definition 3:
+  Definition 3, from BuiltIn1.decl5:
     [4mz [x] = x[0m
-  Definition 4:
+  Definition 4, from BuiltIn1.decl5.match0:
     z [[4mx[0m] = x
 
 Use sites:

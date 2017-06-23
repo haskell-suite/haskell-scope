@@ -1,13 +1,13 @@
 Scope errors:
 
 Definitions:
-  Definition 1:
+  Definition 1, from Class1.decl0:
     class [4mMyClass[0m a where
-  Definition 2:
+  Definition 2, from Class1.decl0:
     class MyClass [4ma[0m where
-  Definition 3:
+  Definition 3, from Class1.decl0:
       [4mmyClassMethod[0m :: a -> a
-  Definition 4:
+  Definition 4, from Class1.decl1:
     [4mfn[0m = myClassMethod
 
 Use sites:

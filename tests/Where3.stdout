@@ -1,13 +1,13 @@
 Scope errors:
 
 Definitions:
-  Definition 1:
+  Definition 1, from Where3.decl0:
     [4ma[0m = b
-  Definition 2:
+  Definition 2, from Where3.decl0.rhs.binds0:
       where [4mb[0m = b
-  Definition 3:
+  Definition 3, from Where3.decl1:
     [4ma'[0m = b
-  Definition 4:
+  Definition 4, from Where3.decl1.rhs.binds0:
       where [4mb[0m = b
 
 Use sites:

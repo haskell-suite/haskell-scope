@@ -1,15 +1,15 @@
 Scope errors:
 
 Definitions:
-  Definition 1:
+  Definition 1, from Instance1.decl0:
     data [4mString[0m
-  Definition 2:
+  Definition 2, from Instance1.decl1:
     class [4mShow[0m a where
-  Definition 3:
+  Definition 3, from Instance1.decl1:
     class Show [4ma[0m where
-  Definition 4:
+  Definition 4, from Instance1.decl1:
       [4mshow[0m :: a -> String
-  Definition 5:
+  Definition 5, from Instance1.decl2.match0:
       show [4mx[0m = show x
 
 Use sites:

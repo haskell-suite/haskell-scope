@@ -1,27 +1,26 @@
 Scope errors:
   Type not in scope.
-    z :: [4mShow[0m c => c
 
 Definitions:
-  Definition 1:
+  Definition 1, from Types1.decl1:
     [4mx[0m = x
-  Definition 2:
+  Definition 2, from Types1.decl2:
     y :: forall [4mb[0m. b
-  Definition 3:
+  Definition 3, from Types1.decl3:
     [4my[0m = y
-  Definition 4:
+  Definition 4, from Types1.decl5:
     [4mz[0m = z
-  Definition 5:
+  Definition 5, from Types1.decl7:
     [4mf[0m = f
-  Definition 6:
+  Definition 6, from Types1.decl8:
     g :: a -> forall [4ma[0m. a
-  Definition 7:
+  Definition 7, from Types1.decl9:
     [4mg[0m = g
 
 Use sites:
   Definition used: 1
     [4mx[0m :: a
-  Definition used: tv.decl0
+  Definition used: Types1.decl0.tv
     x :: [4ma[0m
   Definition used: 1
     x = [4mx[0m
@@ -33,25 +32,25 @@ Use sites:
     y = [4my[0m
   Definition used: 4
     [4mz[0m :: Show c => c
-  Definition used: tv.forall.decl4
+  Definition used: Types1.decl4.tv
     z :: Show [4mc[0m => c
-  Definition used: tv.forall.decl4
+  Definition used: Types1.decl4.tv
     z :: Show c => [4mc[0m
   Definition used: 4
     z = [4mz[0m
   Definition used: 5
     [4mf[0m :: a -> b -> a
-  Definition used: tv.decl6
+  Definition used: Types1.decl6.tv
     f :: [4ma[0m -> b -> a
-  Definition used: tv.decl6
+  Definition used: Types1.decl6.tv
     f :: a -> [4mb[0m -> a
-  Definition used: tv.decl6
+  Definition used: Types1.decl6.tv
     f :: a -> b -> [4ma[0m
   Definition used: 5
     f = [4mf[0m
   Definition used: 7
     [4mg[0m :: a -> forall a. a
-  Definition used: tv.decl8
+  Definition used: Types1.decl8.tv
     g :: [4ma[0m -> forall a. a
   Definition used: 6
     g :: a -> forall a. [4ma[0m

@@ -1,15 +1,15 @@
 Scope errors:
 
 Definitions:
-  Definition 1:
+  Definition 1, from Shadowing2.decl0:
     [4my[0m = y
-  Definition 2:
+  Definition 2, from Shadowing2.decl1:
     [4mx y = y[0m
     [4m  where[0m
     [4m    y = 10[0m
-  Definition 3:
+  Definition 3, from Shadowing2.decl1.match0:
     x [4my[0m = y
-  Definition 4:
+  Definition 4, from Shadowing2.decl1.match0.rhs.binds0:
         [4my[0m = 10
 
 Use sites:

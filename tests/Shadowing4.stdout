@@ -1,11 +1,11 @@
 Scope errors:
 
 Definitions:
-  Definition 1:
+  Definition 1, from Shadowing4.decl0:
     [4mx[0m = case x of
-  Definition 2:
+  Definition 2, from Shadowing4.decl0.rhs.alt0:
           [4mx[0m -> x
-  Definition 3:
+  Definition 3, from Shadowing4.decl0.rhs.alt0.branch.binds0:
               [4mx[0m = 10
 
 Use sites:

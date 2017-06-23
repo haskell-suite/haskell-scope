@@ -1,11 +1,11 @@
 Scope errors:
 
 Definitions:
-  Definition 1:
+  Definition 1, from Infix1.decl0:
     [4ma + b = b + a[0m
-  Definition 2:
+  Definition 2, from Infix1.decl0.match0:
     [4ma[0m + b = b + a
-  Definition 3:
+  Definition 3, from Infix1.decl0.match0:
     a + [4mb[0m = b + a
 
 Use sites:

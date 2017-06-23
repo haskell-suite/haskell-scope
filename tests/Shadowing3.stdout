@@ -1,13 +1,13 @@
 Scope errors:
 
 Definitions:
-  Definition 1:
+  Definition 1, from Shadowing3.decl0:
     [4mx x = x[0m
     [4m  where[0m
     [4m    x = 10[0m
-  Definition 2:
+  Definition 2, from Shadowing3.decl0.match0:
     x [4mx[0m = x
-  Definition 3:
+  Definition 3, from Shadowing3.decl0.match0.rhs.binds0:
         [4mx[0m = 10
 
 Use sites:

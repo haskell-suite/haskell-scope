@@ -1,9 +1,9 @@
 Scope errors:
 
 Definitions:
-  Definition 1:
+  Definition 1, from Shadowing1.decl0:
     [4mx[0m = \x -> x
-  Definition 2:
+  Definition 2, from Shadowing1.decl0.rhs.lambda:
     x = \[4mx[0m -> x
 
 Use sites:
