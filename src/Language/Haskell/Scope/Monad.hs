@@ -106,20 +106,27 @@ data Scope = Scope
     --      Sigh.
     , scopeTyVars :: Map QualifiedName [ScopedName]
     , scopeValues :: Map QualifiedName [ScopedName]
-    , scopeErrors :: [ScopeError]
+    -- , scopeErrors :: [ScopeError]
     }
-instance Monoid Scope where
-    mempty = Scope
+
+emptyScope :: Scope
+emptyScope = Scope
+    { scopeTypes        = Map.empty
+    , scopeTyVars       = Map.empty
+    , scopeValues       = Map.empty}
+
+-- Bah, come up with a better name than 'Out'
+data Out = Out Scope [ScopeError]
+instance Monoid Out where
+    mempty = Out Scope
         { scopeTypes        = Map.empty
         , scopeTyVars       = Map.empty
-        , scopeValues       = Map.empty
-        , scopeErrors       = [] }
-    mappend a b = Scope
+        , scopeValues       = Map.empty} []
+    mappend (Out a aerrs) (Out b berrs) = Out Scope
         { scopeTypes      = Map.unionWithKey check (scopeTypes a) (scopeTypes b)
         , scopeTyVars     = Map.unionWithKey check (scopeTyVars a) (scopeTyVars b)
-        , scopeValues     = Map.unionWithKey check (scopeValues a) (scopeValues b)
-        , scopeErrors     = conflictingValues ++ conflictingTypes ++
-                            scopeErrors a ++ scopeErrors b }
+        , scopeValues     = Map.unionWithKey check (scopeValues a) (scopeValues b) }
+        (conflictingValues ++ conflictingTypes ++ aerrs ++ berrs)
       where
         check _k a' b' = a' ++ b'
         conflictingTypes =
@@ -134,8 +141,7 @@ shadowJoin :: Scope -> Scope -> Scope
 shadowJoin a b = Scope
     { scopeTypes      = scopeTypes a `Map.union` scopeTypes b
     , scopeTyVars     = scopeTyVars a `Map.union` scopeTyVars b
-    , scopeValues     = Map.union (scopeValues a) (scopeValues b)
-    , scopeErrors     = scopeErrors a ++ scopeErrors b }
+    , scopeValues     = Map.union (scopeValues a) (scopeValues b) }
 
 data ReaderEnv = ReaderEnv
   { readerResolveEnv :: ResolveEnv
@@ -144,36 +150,10 @@ data ReaderEnv = ReaderEnv
   , readerModuleName :: String
   }
 
-newtype Rename a = Rename { unRename :: ReaderT ReaderEnv (Writer Scope) a }
+newtype Rename a = Rename { unRename :: ReaderT ReaderEnv (Writer Out) a }
     deriving
-        ( Monad, MonadReader ReaderEnv, MonadWriter Scope
+        ( Monad, MonadReader ReaderEnv, MonadWriter Out
         , Functor, Applicative )
-
--- newtype Rename2 a = Rename2 { unRename2 :: ResolveEnv -> Scope -> Location -> String -> (a, Scope) }
--- instance Functor Rename2 where
---   fmap fn r = Rename2 $ \env scope location m ->
---                 let (a, scope) = unRename2 r env scope location m
---                 in (fn a, scope)
--- instance Applicative Rename2 where
---   pure a = Rename2 $ \env s loc m -> (a, mempty)
---   f <*> g = Rename2 $ \env s loc m ->
---               let (fn, scope1) = unRename2 f env s loc m
---                   (a, scope2) = unRename2 g env s loc m
---               in (fn a, mappend scope1 scope2)
--- instance Monad Rename2 where
---   return = pure
---   f >>= g = Rename2 $ \env s loc m ->
---               let (a, scope1) = unRename2 f env s loc m
---                   (b, scope2) = unRename2 (g a) env s loc m
---               in (b, mappend scope1 scope2)
---
--- test_fn :: Maybe Int -> Rename2 String
--- test_fn (Just val) = return (show val)
--- test_fn Nothing = test_fn (Just undefined)
-
--- instance MonadReader ReaderEnv Rename2 where
---
--- MonadReader ReaderEnv, MonadWriter Scope
 
 data ResolveContext = ResolveToplevel | ResolveClass | ResolveInstance
     deriving ( Show, Eq )
@@ -184,14 +164,30 @@ type Resolve a = a SrcSpanInfo -> Rename (a Origin)
 -- Utilities
 
 runRename :: ResolveEnv -> Rename a -> ([ScopeError], a)
-runRename resolveEnv action = (scopeErrors scope, a)
+runRename resolveEnv action = (errs, a)
   where
-    (a, scope) = runWriter (runReaderT (unRename action) readerEnv)
+    (a, Out scope errs) = runWriter (runReaderT (unRename action) readerEnv)
     readerEnv = ReaderEnv
       { readerResolveEnv = resolveEnv
       , readerScope      = scope
       , readerLocation   = []
       , readerModuleName = "" }
+
+tellScopeErrors :: [ScopeError] -> Rename ()
+tellScopeErrors errs = tell $ Out emptyScope errs
+
+tellScopeValue :: QualifiedName -> ScopedName -> Rename ()
+tellScopeValue qname resolved =
+  tell $ Out emptyScope{ scopeValues = Map.singleton qname [resolved]} []
+
+tellScopeType :: QualifiedName -> ScopedName -> Rename ()
+tellScopeType qname resolved =
+  tell $ Out emptyScope{ scopeTypes = Map.singleton qname [resolved]} []
+
+tellScopeTyVar :: QualifiedName -> ScopedName -> Rename ()
+tellScopeTyVar qname resolved =
+  tell $ Out emptyScope{ scopeTyVars = Map.singleton qname [resolved]} []
+
 
 getLocation :: Rename Location
 getLocation = asks readerLocation
@@ -230,7 +226,7 @@ getInterface modName = do
 
 addToScope :: Source -> String -> Interface -> Rename ()
 addToScope src modName iface =
-    tell mempty
+    tell $ Out emptyScope
         { scopeTypes = Map.fromList
             [ (QualifiedName modName ident, [ScopedName src gname])
             | (gname, _) <- ifaceTypes iface
@@ -240,10 +236,7 @@ addToScope src modName iface =
             [ (QualifiedName modName ident, [ScopedName src gname])
             | gname <- ifaceValues iface
             , let ident = globalNameIdentifier gname]
-        }
-    --      ifaceValues       :: [GlobalName]
-    -- , ifaceTypes        :: [(GlobalName, [GlobalName])]
-    -- ,
+        } []
 
 withLimitedScope :: Interface -> Rename a -> Rename a
 withLimitedScope = undefined
@@ -253,22 +246,22 @@ limitTyVarScope :: String -> Rename a -> Rename a
 limitTyVarScope loc action = {-pushLocation loc $-} Rename $ ReaderT $ \readerEnv ->
     let scope = readerScope readerEnv
         inScope = scope{ scopeTyVars = scopeTyVars scope `Map.union` scopeTyVars nestedScope}
-        (a, nestedScope) = runWriter $ runReaderT (unRename action) readerEnv{readerScope = inScope}
-    in WriterT $ Identity (a, nestedScope{ scopeTyVars = Map.empty })
+        (a, Out nestedScope errs) = runWriter $ runReaderT (unRename action) readerEnv{readerScope = inScope}
+    in WriterT $ Identity (a, Out nestedScope{ scopeTyVars = Map.empty } errs)
 
 limitScope :: String -> Rename a -> Rename a
 limitScope loc action = pushLocation loc $ Rename $ ReaderT $ \readerEnv ->
     let scope = readerScope readerEnv
-        inScope = (nestedScope `shadowJoin` scope){ scopeErrors = []}
-        (a, nestedScope) = runWriter $ runReaderT (unRename action) readerEnv{readerScope = inScope}
-    in WriterT $ Identity (a, mempty{ scopeErrors = scopeErrors nestedScope})
+        inScope = (nestedScope `shadowJoin` scope)
+        (a, Out nestedScope errs) = runWriter $ runReaderT (unRename action) readerEnv{readerScope = inScope}
+    in WriterT $ Identity (a, Out emptyScope errs)
 
 recursiveScope :: Rename a -> Rename a
 recursiveScope action = Rename $ ReaderT $ \readerEnv ->
     let scope = readerScope readerEnv
-        inScope = (nestedScope `shadowJoin` scope){ scopeErrors = []}
-        (a, nestedScope) = runWriter $ runReaderT (unRename action) readerEnv{readerScope = inScope}
-    in WriterT $ Identity (a, nestedScope)
+        inScope = (nestedScope `shadowJoin` scope)
+        (a, Out nestedScope errs) = runWriter $ runReaderT (unRename action) readerEnv{readerScope = inScope}
+    in WriterT $ Identity (a, Out nestedScope errs)
 
 
 shadowSequence :: [Rename a] -> Rename [a]
@@ -282,16 +275,16 @@ shadowSequence' :: ([a] -> Rename b) -> [[ScopeError]] -> [a] -> [Rename a] -> R
 shadowSequence' cont errs acc lst = Rename $ ReaderT $ \readerEnv -> readerEnv `seq`
   case lst of
     [] -> runReaderT (unRename $ do
-                        tell mempty{scopeErrors = concat errs}
+                        tell $ Out emptyScope (concat errs)
                         cont (reverse acc))
                       readerEnv
     (x:xs) ->
       case runWriter $ runReaderT (unRename x) readerEnv of
-        (x_ret, x_out) ->
+        (x_ret, Out x_scope x_errs) ->
           let scope = readerScope readerEnv
-              inScope = (x_out `shadowJoin` scope)
+              inScope = (x_scope `shadowJoin` scope)
           in runReaderT
-                (unRename $ shadowSequence' cont (scopeErrors x_out:errs) (x_ret:acc) xs)
+                (unRename $ shadowSequence' cont (x_errs:errs) (x_ret:acc) xs)
                 readerEnv{readerScope = inScope}
 
 restrictScope :: QualifiedName -> ScopedName -> Rename a -> Rename a

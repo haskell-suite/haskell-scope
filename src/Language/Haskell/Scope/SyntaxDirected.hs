@@ -4,7 +4,6 @@ module Language.Haskell.Scope.SyntaxDirected
     ) where
 
 import           Control.Monad.Reader
-import           Control.Monad.Writer         (tell)
 import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Monoid                  (Monoid (..))
@@ -52,10 +51,10 @@ resolveName'' isTv qualification ns name =
                 case ret of
                     Left err -> ScopeError err
                     Right (ScopedName _ gname) -> Resolved gname
-        tell mempty{ scopeErrors =
-              case ret of
-                Left err -> [err]
-                Right{}  -> [] }
+        tellScopeErrors $
+            case ret of
+              Left err -> [err]
+              Right{}  -> []
         return $ Origin nameInfo src
     getScoped =
         case ns of
@@ -92,12 +91,9 @@ defineName ns name = do
         gname = GlobalName loc src (QualifiedName thisModule ident)
         resolved = ScopedName LocalSource gname
     case ns of
-        NsValues ->
-            tell mempty{ scopeValues = Map.singleton qname [resolved]}
-        NsTypes  ->
-            tell mempty{ scopeTypes = Map.singleton qname [resolved]}
-        NsTypeVariables ->
-            tell mempty{ scopeTyVars = Map.singleton qname [resolved] }
+        NsValues        -> tellScopeValue qname resolved
+        NsTypes         -> tellScopeType qname resolved
+        NsTypeVariables -> tellScopeTyVar qname resolved
     return $ con (Origin (Binding gname) src) ident
   where
     (con, src, ident) =
@@ -113,12 +109,9 @@ defineMultiName ns bindingSrc name cont = do
         gname = GlobalName loc bindingSrc (QualifiedName thisModule ident)
         resolved = ScopedName LocalSource gname
     case ns of
-        NsValues ->
-            tell mempty{ scopeValues = Map.singleton qname [resolved]}
-        NsTypes  ->
-            tell mempty{ scopeTypes = Map.singleton qname [resolved]}
-        NsTypeVariables ->
-            tell mempty{ scopeTyVars = Map.singleton qname [resolved] }
+        NsValues        -> tellScopeValue qname resolved
+        NsTypes         -> tellScopeType qname resolved
+        NsTypeVariables -> tellScopeTyVar qname resolved
     restrictScope qname resolved
       (cont $ con (Origin (Binding gname) src) ident)
   where
