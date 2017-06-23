@@ -75,6 +75,8 @@ unitTests =
     , scopeTest "Haskell2010/DeclTypeSig"
     , scopeTest "Haskell2010/Type"
     ]
+  , testGroup "Extensions"
+    [ scopeTest "Extensions/MagicHash" ]
   , testGroup "Known issues"
     [ scopeTest "Instance4"
     , scopeTest "Records2" ]

@@ -1,0 +1,25 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from MagicHash.decl0:
+    [4mprimint[0m = 1#
+  Definition 2, from MagicHash.decl1:
+    [4mprimword[0m = 1##
+  Definition 3, from MagicHash.decl2:
+    [4mprimfloat[0m = 1.0#
+  Definition 4, from MagicHash.decl3:
+    [4mprimdouble[0m = 1.0##
+  Definition 5, from MagicHash.decl4:
+    [4mprimchar[0m = 'c'#
+  Definition 6, from MagicHash.decl5:
+    [4mprimstring[0m = "string"#
+  Definition 7, from MagicHash.decl6:
+    data [4mInt#[0m
+  Definition 8, from MagicHash.decl7:
+    data [4mInt[0m = I# Int#
+  Definition 9, from MagicHash.decl7:
+    data Int = [4mI#[0m Int#
+
+Use sites:
+  Definition used: 7
+    data Int = I# [4mInt#[0m
