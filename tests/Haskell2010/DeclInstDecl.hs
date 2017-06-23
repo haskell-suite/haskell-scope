@@ -19,6 +19,6 @@ instance Class1 (Bool a b)
 instance Class1 a => Class1 (Maybe a)
 
 instance Class1 Bool where
-  pat = True -- THIS IS BROKEN. See fixme in resolveDecl
+  pat = True
   fn True = False
   fn False = True

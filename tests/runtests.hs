@@ -68,6 +68,7 @@ unitTests =
     , scopeTest "Haskell2010/ModuleNoExports"
     , scopeTest "Haskell2010/ModuleExports"
     , scopeTest "Haskell2010/DeclDataDecl"
+    , scopeTest "Haskell2010/DeclInstDecl"
     , scopeTest "Haskell2010/DeclDefaultDecl"
     , scopeTest "Haskell2010/DeclForImp"
     , scopeTest "Haskell2010/DeclFunBind"

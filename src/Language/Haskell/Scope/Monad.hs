@@ -148,6 +148,7 @@ data ReaderEnv = ReaderEnv
   , readerScope      :: Scope
   , readerLocation   :: Location
   , readerModuleName :: String
+  , readerContext    :: ResolveContext
   }
 
 newtype Rename a = Rename { unRename :: ReaderT ReaderEnv (Writer Out) a }
@@ -171,7 +172,8 @@ runRename resolveEnv action = (errs, a)
       { readerResolveEnv = resolveEnv
       , readerScope      = scope
       , readerLocation   = []
-      , readerModuleName = "" }
+      , readerModuleName = ""
+      , readerContext    = ResolveToplevel }
 
 tellScopeErrors :: [ScopeError] -> Rename ()
 tellScopeErrors errs = tell $ Out emptyScope errs
@@ -188,6 +190,11 @@ tellScopeTyVar :: QualifiedName -> ScopedName -> Rename ()
 tellScopeTyVar qname resolved =
   tell $ Out emptyScope{ scopeTyVars = Map.singleton qname [resolved]} []
 
+askContext :: Rename ResolveContext
+askContext = asks readerContext
+
+localContext :: ResolveContext -> Rename a -> Rename a
+localContext ctx = local (\env -> env{readerContext = ctx})
 
 getLocation :: Rename Location
 getLocation = asks readerLocation

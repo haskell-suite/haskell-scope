@@ -327,36 +327,45 @@ resolveSign sign = pure $
         Negative src -> Negative (Origin None src)
 
 resolvePat :: Resolve Pat
-resolvePat pat = ask >>= \env -> env `seq`
-    case pat of
-        PVar src name ->
-            PVar (Origin None src)
-                <$> defineName NsValues name
-        PApp src con pats ->
-            PApp (Origin None src)
-                <$> resolveQName NsValues con
-                <*> mapM resolvePat pats
-        PWildCard src ->
-            pure $ PWildCard (Origin None src)
-        PParen src sub ->
-            PParen (Origin None src)
-                <$> resolvePat sub
-        PTuple src boxed pats ->
-            PTuple (Origin None src) boxed
-                <$> mapM resolvePat pats
-        PLit src sign lit ->
-            PLit (Origin None src)
-                <$> resolveSign sign
-                <*> resolveLiteral lit
-        PList src pats ->
-            PList (Origin None src)
-                <$> mapM resolvePat pats
-        PInfixApp src a con b ->
-            PInfixApp (Origin None src)
-                <$> resolvePat a
-                <*> resolveQName NsValues con
-                <*> resolvePat b
-        _ -> error $ "resolvePat: " ++ prettyPrint pat
+resolvePat pat =
+  case pat of
+    PVar src name -> do
+      rContext <- askContext
+      case rContext of
+        ResolveToplevel ->
+          PVar (Origin None src)
+            <$> defineName NsValues name
+        ResolveClass ->
+          PVar (Origin None src)
+            <$> resolveName NsValues name
+        ResolveInstance ->
+          PVar (Origin None src)
+            <$> resolveName NsValues name
+    PApp src con pats ->
+      PApp (Origin None src)
+        <$> resolveQName NsValues con
+        <*> mapM resolvePat pats
+    PWildCard src ->
+      pure $ PWildCard (Origin None src)
+    PParen src sub ->
+      PParen (Origin None src)
+        <$> resolvePat sub
+    PTuple src boxed pats ->
+      PTuple (Origin None src) boxed
+        <$> mapM resolvePat pats
+    PLit src sign lit ->
+      PLit (Origin None src)
+        <$> resolveSign sign
+        <*> resolveLiteral lit
+    PList src pats ->
+      PList (Origin None src)
+        <$> mapM resolvePat pats
+    PInfixApp src a con b ->
+      PInfixApp (Origin None src)
+        <$> resolvePat a
+        <*> resolveQName NsValues con
+        <*> resolvePat b
+    _ -> error $ "resolvePat: " ++ prettyPrint pat
 
 -- resolveGuardedAlts :: Resolve GuardedAlts
 -- resolveGuardedAlts galts =
@@ -371,7 +380,7 @@ resolveBinds binds =
     case binds of
         BDecls src decls ->
             BDecls (Origin None src)
-                <$> mapMWithLocation "binds" (resolveDecl ResolveToplevel) decls
+                <$> mapMWithLocation "binds" (localContext ResolveToplevel . resolveDecl) decls
         _ -> error "Language.Haskell.Scope.resolveBinds: undefined"
 
 resolveAlt :: Resolve Alt
@@ -580,7 +589,7 @@ resolveClassDecl decl =
   case decl of
     ClsDecl src sub ->
       ClsDecl (Origin None src)
-        <$> resolveDecl ResolveClass sub
+        <$> localContext ResolveClass (resolveDecl sub)
     _ -> error "resolveClassDecl"
 
 resolveFunDep :: Resolve FunDep
@@ -594,7 +603,7 @@ resolveInstDecl inst =
   case inst of
     InsDecl src decl ->
       InsDecl (Origin None src)
-        <$> resolveDecl ResolveInstance decl
+        <$> localContext ResolveInstance (resolveDecl decl)
     _ -> error "resolveInstDecl"
 
 resolveActivation :: Resolve Activation
@@ -616,8 +625,9 @@ resolveOp op =
     VarOp src name -> VarOp (Origin None src) <$> resolveName NsValues name
     ConOp src name -> ConOp (Origin None src) <$> resolveName NsValues name
 
-resolveDecl :: ResolveContext -> Resolve Decl
-resolveDecl rContext decl =
+resolveDecl :: Resolve Decl
+resolveDecl decl = do
+  rContext <- askContext
   case decl of
     DataDecl src isNewtype ctx dhead cons derive ->
       limitTyVarScope "data" $
@@ -627,7 +637,7 @@ resolveDecl rContext decl =
           <*> resolveDeclHead dhead
           <*> mapM resolveQualConDecl cons
           <*> resolveMaybe resolveDeriving derive
-    FunBind src matches -> do
+    FunBind src matches -> localContext ResolveToplevel $ do
       -- We use the bind site to uniquely identify
       -- top-level functions. For class declarations,
       -- we use their type signature.
@@ -648,8 +658,8 @@ resolveDecl rContext decl =
       pat' <- resolvePat pat
       limitScope "rhs" $ PatBind (Origin None src)
           <$> pure pat'
-          <*> resolveRhs rhs
-          <*> resolveMaybe resolveBinds binds
+          <*> localContext ResolveToplevel (resolveRhs rhs)
+          <*> localContext ResolveToplevel (resolveMaybe resolveBinds binds)
 
 
     -- There's an implicit forall here.
@@ -821,5 +831,5 @@ resolveModule m =
           <$> resolveMaybe resolveModuleHead mhead
           <*> mapM resolveModulePragma pragma
           <*> mapM resolveImportDecl imports
-          <*> mapMWithLocation "decl" (resolveDecl ResolveToplevel) decls
+          <*> mapMWithLocation "decl" (localContext ResolveToplevel . resolveDecl) decls
     _ -> error "resolveModule"

@@ -1,7 +1,4 @@
 Scope errors:
-  Conflicting definitions:
-      [4mshowList[0m :: List a -> String
-      [4mshowList[0m = show
 
 Definitions:
   Definition 1, from Class3.decl0:
@@ -18,8 +15,6 @@ Definitions:
       [4mshow[0m :: a -> String
   Definition 7, from Class3.decl2:
       [4mshowList[0m :: List a -> String
-  Definition 8, from Class3.decl2:
-      [4mshowList[0m = show
 
 Use sites:
   Definition used: 5
@@ -32,5 +27,7 @@ Use sites:
       showList :: List [4ma[0m -> String
   Definition used: 1
       showList :: List a -> [4mString[0m
+  Definition used: 7
+      [4mshowList[0m = show
   Definition used: 6
       showList = [4mshow[0m
