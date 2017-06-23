@@ -1,0 +1,101 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from Type.decl0:
+    data [4mMaybe[0m a
+  Definition 2, from Type.decl0:
+    data Maybe [4ma[0m
+  Definition 3, from Type.decl1:
+    data [4mInt[0m
+  Definition 4, from Type.decl2:
+    class [4mShow[0m a
+  Definition 5, from Type.decl2:
+    class Show [4ma[0m
+  Definition 6, from Type.decl4:
+    [4mforall[0m = forall
+  Definition 7, from Type.decl6:
+    [4mtyfun[0m = tyfun
+  Definition 8, from Type.decl8:
+    [4mtytuple[0m = tytuple
+  Definition 9, from Type.decl10:
+    [4mtylist[0m = tylist
+  Definition 10, from Type.decl12:
+    [4mtyapp[0m = tyapp
+  Definition 11, from Type.decl14:
+    [4mtycon[0m = tycon
+  Definition 12, from Type.decl16:
+    [4mtyparen[0m = typaren
+  Definition 13, from Type.decl18:
+    [4mtyinfix[0m = tyinfix
+
+Use sites:
+  Definition used: 6
+    [4mforall[0m :: Show a => a
+  Definition used: 4
+    forall :: [4mShow[0m a => a
+  Definition used: Type.decl3.tv
+    forall :: Show [4ma[0m => a
+  Definition used: Type.decl3.tv
+    forall :: Show a => [4ma[0m
+  Definition used: 6
+    forall = [4mforall[0m
+  Definition used: 7
+    [4mtyfun[0m :: a -> b
+  Definition used: Type.decl5.tv
+    tyfun :: [4ma[0m -> b
+  Definition used: Type.decl5.tv
+    tyfun :: a -> [4mb[0m
+  Definition used: 7
+    tyfun = [4mtyfun[0m
+  Definition used: 8
+    [4mtytuple[0m :: (a,b)
+  Definition used: Type.decl7.tv
+    tytuple :: ([4ma[0m,b)
+  Definition used: Type.decl7.tv
+    tytuple :: (a,[4mb[0m)
+  Definition used: 8
+    tytuple = [4mtytuple[0m
+  Definition used: 9
+    [4mtylist[0m :: [a]
+  Definition used: Type.decl9.tv
+    tylist :: [[4ma[0m]
+  Definition used: 9
+    tylist = [4mtylist[0m
+  Definition used: 10
+    [4mtyapp[0m :: a b c
+  Definition used: Type.decl11.tv
+    tyapp :: [4ma[0m b c
+  Definition used: Type.decl11.tv
+    tyapp :: a [4mb[0m c
+  Definition used: Type.decl11.tv
+    tyapp :: a b [4mc[0m
+  Definition used: 10
+    tyapp = [4mtyapp[0m
+  Definition used: 11
+    [4mtycon[0m :: Maybe Int
+  Definition used: 1
+    tycon :: [4mMaybe[0m Int
+  Definition used: 3
+    tycon :: Maybe [4mInt[0m
+  Definition used: 11
+    tycon = [4mtycon[0m
+  Definition used: 12
+    [4mtyparen[0m :: (Int) -> (Maybe a)
+  Definition used: 3
+    typaren :: ([4mInt[0m) -> (Maybe a)
+  Definition used: 1
+    typaren :: (Int) -> ([4mMaybe[0m a)
+  Definition used: Type.decl15.tv
+    typaren :: (Int) -> (Maybe [4ma[0m)
+  Definition used: 12
+    typaren = [4mtyparen[0m
+  Definition used: 13
+    [4mtyinfix[0m :: a `Maybe` b
+  Definition used: Type.decl17.tv
+    tyinfix :: [4ma[0m `Maybe` b
+  Definition used: 1
+    tyinfix :: a `[4mMaybe[0m` b
+  Definition used: Type.decl17.tv
+    tyinfix :: a `Maybe` [4mb[0m
+  Definition used: 13
+    tyinfix = [4mtyinfix[0m

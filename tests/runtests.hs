@@ -73,6 +73,7 @@ unitTests =
     , scopeTest "Haskell2010/DeclPatBind"
     , scopeTest "Haskell2010/DeclTypeDecl"
     , scopeTest "Haskell2010/DeclTypeSig"
+    , scopeTest "Haskell2010/Type"
     ]
   , testGroup "Known issues"
     [ scopeTest "Instance4"
