@@ -1,0 +1,72 @@
+Scope errors:
+  Conflicting definitions:
+    [4mx[0m = () -- #1
+    [4mx[0m = () -- #2
+  Ambiguous:
+    This identifier:
+      y = [4mx[0m
+    Could refer to any of these:
+      [4mx[0m = () -- #1
+      [4mx[0m = () -- #2
+  Conflicting definitions:
+    [4mfn 1 = fn[0m -- 'fn' inside the body refers to itself.
+    [4mfn 2 = fn[0m
+  Ambiguous:
+    This identifier:
+      use_fn = [4mfn[0m -- Ambiguous.
+    Could refer to any of these:
+      [4mfn 1 = fn[0m -- 'fn' inside the body refers to itself.
+      [4mfn 2 = fn[0m
+  Conflicting definitions:
+    data [4mX[0m -- #1
+    data [4mX[0m -- #2
+  Ambiguous:
+    This identifier:
+      type Y = [4mX[0m
+    Could refer to any of these:
+      data [4mX[0m -- #1
+      data [4mX[0m -- #2
+  Conflicting definitions:
+    class [4mC[0m
+    class [4mC[0m
+  Conflicting definitions:
+    ([4mz[0m,z) = ()
+    (z,[4mz[0m) = ()
+
+Definitions:
+  Definition 1, from Error1.decl0:
+    [4mx[0m = () -- #1
+  Definition 2, from Error1.decl1:
+    [4mx[0m = () -- #2
+  Definition 3, from Error1.decl2:
+    [4my[0m = x
+  Definition 4, from Error1.decl3:
+    [4mfn 1 = fn[0m -- 'fn' inside the body refers to itself.
+  Definition 5, from Error1.decl4:
+    [4muse_fn[0m = fn -- Ambiguous.
+  Definition 6, from Error1.decl5:
+    [4mfn 2 = fn[0m
+  Definition 7, from Error1.decl6:
+    data [4mX[0m -- #1
+  Definition 8, from Error1.decl7:
+    data [4mX[0m -- #2
+  Definition 9, from Error1.decl8:
+    type [4mY[0m = X
+  Definition 10, from Error1.decl9:
+    class [4mC[0m
+  Definition 11, from Error1.decl10:
+    class [4mC[0m
+  Definition 12, from Error1.decl11:
+    ([4mz[0m,z) = ()
+  Definition 13, from Error1.decl11:
+    (z,[4mz[0m) = ()
+
+Use sites:
+  Definition used: 4
+    [4mfn[0m 1 = fn -- 'fn' inside the body refers to itself.
+  Definition used: 4
+    fn 1 = [4mfn[0m -- 'fn' inside the body refers to itself.
+  Definition used: 6
+    [4mfn[0m 2 = fn
+  Definition used: 6
+    fn 2 = [4mfn[0m
