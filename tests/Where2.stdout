@@ -15,3 +15,7 @@ Use sites:
     a = [4mb[0m
   Definition used: 2
       where b = [4mb[0m
+
+Exports:
+  a, Value from Where2
+  a', Value from Where2

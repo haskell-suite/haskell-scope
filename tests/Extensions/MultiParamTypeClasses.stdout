@@ -63,3 +63,13 @@ Use sites:
     instance IArray [4mUArray[0m Char
   Definition used: 8
     instance IArray UArray [4mChar[0m
+
+Exports:
+  Array, Data from MultiParamTypeClasses
+  Bool, Data from MultiParamTypeClasses
+  Char, Data from MultiParamTypeClasses
+  HasBounds, Class from MultiParamTypeClasses
+  IArray, Class from MultiParamTypeClasses
+  MArray, Class from MultiParamTypeClasses
+  Monad, Class from MultiParamTypeClasses
+  UArray, Data from MultiParamTypeClasses

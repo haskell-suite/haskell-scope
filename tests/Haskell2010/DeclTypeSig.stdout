@@ -19,3 +19,9 @@ Use sites:
     b, [4mc[0m, d :: ()
   Definition used: 4
     b, c, [4md[0m :: ()
+
+Exports:
+  a, Value from DeclTypeSig
+  b, Value from DeclTypeSig
+  c, Value from DeclTypeSig
+  d, Value from DeclTypeSig

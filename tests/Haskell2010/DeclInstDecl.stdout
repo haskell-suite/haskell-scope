@@ -1,0 +1,109 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from DeclInstDecl.decl0:
+    class [4mClass0[0m
+  Definition 2, from DeclInstDecl.decl1:
+    class [4mClass1[0m a where
+  Definition 3, from DeclInstDecl.decl1:
+    class Class1 [4ma[0m where
+  Definition 4, from DeclInstDecl.decl1:
+      [4mpat[0m :: a
+  Definition 5, from DeclInstDecl.decl1:
+      [4mfn[0m :: a -> a
+  Definition 6, from DeclInstDecl.decl2:
+    data [4mBool[0m = True | False
+  Definition 7, from DeclInstDecl.decl2:
+    data Bool = [4mTrue[0m | False
+  Definition 8, from DeclInstDecl.decl2:
+    data Bool = True | [4mFalse[0m
+  Definition 9, from DeclInstDecl.decl3:
+    data [4mString[0m
+  Definition 10, from DeclInstDecl.decl4:
+    data [4mMaybe[0m a = Just a | Nothing
+  Definition 11, from DeclInstDecl.decl4:
+    data Maybe [4ma[0m = Just a | Nothing
+  Definition 12, from DeclInstDecl.decl4:
+    data Maybe a = [4mJust[0m a | Nothing
+  Definition 13, from DeclInstDecl.decl4:
+    data Maybe a = Just a | [4mNothing[0m
+
+Use sites:
+  Definition used: 3
+      pat :: [4ma[0m
+  Definition used: 3
+      fn :: [4ma[0m -> a
+  Definition used: 3
+      fn :: a -> [4ma[0m
+  Definition used: 11
+    data Maybe a = Just [4ma[0m | Nothing
+  Definition used: 2
+    instance [4mClass1[0m Bool
+  Definition used: 6
+    instance Class1 [4mBool[0m
+  Definition used: 2
+    instance [4mClass1[0m (Bool)
+  Definition used: 6
+    instance Class1 ([4mBool[0m)
+  Definition used: 2
+    instance [4mClass1[0m (a `Bool` b)
+  Definition used: DeclInstDecl.decl7.tv
+    instance Class1 ([4ma[0m `Bool` b)
+  Definition used: 6
+    instance Class1 (a `[4mBool[0m` b)
+  Definition used: DeclInstDecl.decl7.tv
+    instance Class1 (a `Bool` [4mb[0m)
+  Definition used: 2
+    instance [4mClass1[0m (Bool a b)
+  Definition used: 6
+    instance Class1 ([4mBool[0m a b)
+  Definition used: DeclInstDecl.decl8.tv
+    instance Class1 (Bool [4ma[0m b)
+  Definition used: DeclInstDecl.decl8.tv
+    instance Class1 (Bool a [4mb[0m)
+  Definition used: 2
+    instance [4mClass1[0m a => Class1 (Maybe a)
+  Definition used: DeclInstDecl.decl9.tv
+    instance Class1 [4ma[0m => Class1 (Maybe a)
+  Definition used: 2
+    instance Class1 a => [4mClass1[0m (Maybe a)
+  Definition used: 10
+    instance Class1 a => Class1 ([4mMaybe[0m a)
+  Definition used: DeclInstDecl.decl9.tv
+    instance Class1 a => Class1 (Maybe [4ma[0m)
+  Definition used: 2
+    instance [4mClass1[0m Bool where
+  Definition used: 6
+    instance Class1 [4mBool[0m where
+  Definition used: 4
+      [4mpat[0m = True
+  Definition used: 7
+      pat = [4mTrue[0m
+  Definition used: 5
+    [4m  fn True = False[0m
+    [4m  fn False = True[0m
+  Definition used: 5
+      [4mfn[0m True = False
+  Definition used: 7
+      fn [4mTrue[0m = False
+  Definition used: 8
+      fn True = [4mFalse[0m
+  Definition used: 5
+      [4mfn[0m False = True
+  Definition used: 8
+      fn [4mFalse[0m = True
+  Definition used: 7
+      fn False = [4mTrue[0m
+
+Exports:
+  Bool, Data from DeclInstDecl
+  Class0, Class from DeclInstDecl
+  Class1, Class from DeclInstDecl
+  Maybe, Data from DeclInstDecl
+  String, Data from DeclInstDecl
+  False, Constructor from DeclInstDecl
+  Just, Constructor from DeclInstDecl
+  Nothing, Constructor from DeclInstDecl
+  True, Constructor from DeclInstDecl
+  fn, Method from DeclInstDecl
+  pat, Method from DeclInstDecl

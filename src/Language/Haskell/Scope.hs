@@ -8,7 +8,8 @@ module Language.Haskell.Scope
   , Origin(..)
   , NameInfo(..)
   , Location
-  , GlobalName(..)
+  , Entity(..)
+  , EntityKind(..)
   , QualifiedName(..)
   , ScopedName(..)
   , RNamespace(..)
@@ -16,7 +17,6 @@ module Language.Haskell.Scope
   , Source(..)
   , ScopeError(..)
   , resolve
-  , globalNameSrcSpanInfo
 
   ) where
 

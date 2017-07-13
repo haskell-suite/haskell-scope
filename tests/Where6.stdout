@@ -29,3 +29,7 @@ Use sites:
     a' x = [4mb[0m
   Definition used: 6
       where b = [4mb[0m
+
+Exports:
+  a, Value from Where6
+  a', Value from Where6

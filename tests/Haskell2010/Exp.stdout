@@ -231,3 +231,40 @@ Use sites:
     explicitTypeSig = [4mlitInt[0m :: Int
   Definition used: 8
     explicitTypeSig = litInt :: [4mInt[0m
+
+Exports:
+  Bool, Data from Exp
+  Int, Data from Exp
+  Record, Data from Exp
+  +, Value from Exp
+  False, Constructor from Exp
+  Record, Constructor from Exp
+  True, Constructor from Exp
+  app, Value from Exp
+  casexpr, Value from Exp
+  con, Value from Exp
+  doexpr, Value from Exp
+  enumfrom, Value from Exp
+  enumfromthen, Value from Exp
+  enumfromthento, Value from Exp
+  enumfromto, Value from Exp
+  explicitTypeSig, Value from Exp
+  field1, Selector from Exp
+  field2, Selector from Exp
+  ifexpr, Value from Exp
+  infixApp, Value from Exp
+  lambda, Value from Exp
+  letexpr, Value from Exp
+  list, Value from Exp
+  listcomp, Value from Exp
+  litChar, Value from Exp
+  litFrac, Value from Exp
+  litInt, Value from Exp
+  litString, Value from Exp
+  negApp, Value from Exp
+  paren, Value from Exp
+  prefixApp, Value from Exp
+  recConstr, Value from Exp
+  recUpdate, Value from Exp
+  tuple, Value from Exp
+  var, Value from Exp

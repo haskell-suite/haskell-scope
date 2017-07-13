@@ -1,6 +1,6 @@
 module Main (main) where
 
-import           Control.Monad                  (fmap, mplus, when)
+import           Control.Monad                  (fmap, mplus, when, unless)
 import           Data.Foldable                  (foldMap)
 import           Data.List                      (intercalate, nub)
 import           Language.Haskell.Exts          (ParseResult (..), SrcSpan (..),
@@ -75,6 +75,7 @@ unitTests =
     , scopeTest "Haskell2010/DeclPatBind"
     , scopeTest "Haskell2010/DeclTypeDecl"
     , scopeTest "Haskell2010/DeclTypeSig"
+    , scopeTest "Haskell2010/DeclInfixDecl"
     , scopeTest "Haskell2010/Type"
     ]
   , testGroup "Extensions"
@@ -94,6 +95,22 @@ scopeTest name = testCase name $ do
   let isFailure = expectedOutput /= output
   when isFailure $ fail "Diff Error"
 
+loadStdlib :: IO ResolveEnv
+loadStdlib = do
+  fileContent <- readFile "Stdlib.hs"
+  parsed <- parseFile "Stdlib.hs"
+  case parsed of
+    ParseFailed position msg ->
+      fail $ show position ++ "\n" ++ msg
+    ParseOk thisModule -> do
+      let (env, errs, _scoped) = resolve emptyResolveEnv thisModule
+      unless (null errs) $
+        fail $ unlines $
+          [ "Scope errors:" ] ++
+          [ show (indent 2 $ ppScopeError err fileContent)
+          | err <- errs ]
+      return env
+
 getScopeInfo :: FilePath -> IO (Either String String)
 getScopeInfo file = do
   fileContent <- readFile file
@@ -104,7 +121,8 @@ getScopeInfo file = do
         show position ++ "\n" ++
         msg
     ParseOk thisModule -> do
-      let (_env, errs, scoped) = resolve emptyResolveEnv thisModule
+      initEnv <- loadStdlib
+      let (env, errs, scoped) = resolve initEnv thisModule
           allResolved = foldMap getResolved scoped
           getResolved (Origin (Resolved gname) loc) = [(loc, gname)]
           getResolved _ = []
@@ -112,6 +130,7 @@ getScopeInfo file = do
           getBinding (Origin (Binding gname) loc) = [(loc, gname)]
           getBinding _ = []
           defIndex = zip (map snd bindings) [1::Int ..]
+          Just iface = lookupInterface (getModuleName thisModule) env
       return $ Right $ unlines $
         [ "Scope errors:" ] ++
         [ show (indent 2 $ ppScopeError err fileContent)
@@ -120,33 +139,40 @@ getScopeInfo file = do
         concat
         [ [ printf "  Definition %d, from %s:" (n::Int) (intercalate "." $ reverse addr)
           , show $ ppLocation 4 fileContent loc ]
-        | ((loc, GlobalName addr _src _), n) <- zip bindings [1..] ] ++
+        | ((loc, Entity addr _src _ _), n) <- zip bindings [1..] ] ++
         [ "", "Use sites:" ] ++
         concat
-        [ [ printf "  Definition used: %s" (maybe (intercalate "." $ reverse pos) show (lookup gname defIndex))
+        [ [ printf "  Definition used: %s" (maybe (intercalate "." $ reverse pos) show (lookup entity defIndex))
           , show $ ppLocation 4 fileContent usageLoc ]
-        | (usageLoc, gname@(GlobalName pos _src _) ) <- allResolved ]
+        | (usageLoc, entity@(Entity pos _src _ _) ) <- allResolved ] ++
+        [ "", "Exports:" ] ++
+        [ "  " ++ ppEntity entity
+        | entity <- iface
+        ]
+
+ppEntity :: Entity -> String
+ppEntity (Entity loc _src (QualifiedName _module identifier) kind) =
+  identifier ++ ", " ++ show kind ++ " from " ++ last loc
 
 ppScopeError :: ScopeError -> String -> Doc
 ppScopeError err fileContent =
   case err of
-    ENotInScope _ _ NsTypes -> text "Type not in scope."
-    ENotInScope _ _ NsTypeVariables -> text "Type variable not in scope."
-    ENotInScope loc _ NsValues ->
-      text "Value not in scope:" <$$>
+    ENotInScope loc _ eKind ->
+      text (t ++ " not in scope:") <$$>
       ppLocation 2 fileContent loc
+      where t = show eKind
     EAmbiguous loc ambi ->
       text "Ambiguous:" <$$>
       indent 2
         (text "This identifier:" <$$>
         ppLocation 2 fileContent loc <$$>
         text "Could refer to any of these:" <$$>
-        vsep [ ppLocation 2 fileContent (globalNameSrcSpanInfo gname)
-             | ScopedName _source gname <- ambi])
+        vsep [ ppLocation 2 fileContent (entitySrcSpan entity)
+             | ScopedName _source entity <- ambi])
     EConflicting dups ->
       text "Conflicting definitions:" <$$>
-      vsep [ ppLocation 2 fileContent (globalNameSrcSpanInfo gname)
-           | ScopedName _source gname <- dups]
+      vsep [ ppLocation 2 fileContent (entitySrcSpan entity)
+           | ScopedName _source entity <- dups]
     ETypeAsClass -> text "Type used as type class."
     ENotExported -> text "Identifier not exported from module."
     EModNotFound -> text "Unknown module."

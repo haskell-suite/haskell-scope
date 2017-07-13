@@ -21,3 +21,8 @@ Use sites:
     instance String `[4mShow[0m` String
   Definition used: 1
     instance String `Show` [4mString[0m
+
+Exports:
+  Show, Class from Instance3
+  String, Data from Instance3
+  show, Method from Instance3

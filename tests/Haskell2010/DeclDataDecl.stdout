@@ -145,3 +145,29 @@ Use sites:
     collection = [T3, T5, T6, T7, T8, Left, Right, T10, field1, [4mfield2[0m, T11]
   Definition used: 32
     collection = [T3, T5, T6, T7, T8, Left, Right, T10, field1, field2, [4mT11[0m]
+
+Exports:
+  Show, Class from DeclDataDecl
+  T1, Data from DeclDataDecl
+  T10, Data from DeclDataDecl
+  T11, Data from DeclDataDecl
+  T2, Data from DeclDataDecl
+  T3, Data from DeclDataDecl
+  T4, Data from DeclDataDecl
+  T5, Data from DeclDataDecl
+  T6, Data from DeclDataDecl
+  T7, Data from DeclDataDecl
+  T8, Data from DeclDataDecl
+  T9, Data from DeclDataDecl
+  Left, Constructor from DeclDataDecl
+  Right, Constructor from DeclDataDecl
+  T10, Constructor from DeclDataDecl
+  T11, Constructor from DeclDataDecl
+  T3, Constructor from DeclDataDecl
+  T5, Constructor from DeclDataDecl
+  T6, Constructor from DeclDataDecl
+  T7, Constructor from DeclDataDecl
+  T8, Constructor from DeclDataDecl
+  collection, Value from DeclDataDecl
+  field1, Selector from DeclDataDecl
+  field2, Selector from DeclDataDecl

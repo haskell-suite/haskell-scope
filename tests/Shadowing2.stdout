@@ -19,3 +19,7 @@ Use sites:
     [4mx[0m y = y
   Definition used: 4
     x y = [4my[0m
+
+Exports:
+  x, Value from Shadowing2
+  y, Value from Shadowing2

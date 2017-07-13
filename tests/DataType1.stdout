@@ -35,3 +35,12 @@ Use sites:
     data Data a = Con1 a | Con2 Int | Con3 a Int | Con4 (Data a) | Con5 ([4mData[0m Int)
   Definition used: 1
     data Data a = Con1 a | Con2 Int | Con3 a Int | Con4 (Data a) | Con5 (Data [4mInt[0m)
+
+Exports:
+  Data, Data from DataType1
+  Int, Data from DataType1
+  Con1, Constructor from DataType1
+  Con2, Constructor from DataType1
+  Con3, Constructor from DataType1
+  Con4, Constructor from DataType1
+  Con5, Constructor from DataType1

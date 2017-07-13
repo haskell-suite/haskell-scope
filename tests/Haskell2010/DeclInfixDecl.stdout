@@ -1,0 +1,24 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from DeclInfixDecl.decl6:
+    ([4m+[0m) = (+)
+
+Use sites:
+  Definition used: 1
+    infix [4m+[0m
+  Definition used: 1
+    infixr [4m+[0m
+  Definition used: 1
+    infixl [4m+[0m
+  Definition used: 1
+    infix 1 [4m+[0m
+  Definition used: 1
+    infixr 1 [4m+[0m
+  Definition used: 1
+    infixl 1 [4m+[0m
+  Definition used: 1
+    (+) = ([4m+[0m)
+
+Exports:
+  +, Value from DeclInfixDecl

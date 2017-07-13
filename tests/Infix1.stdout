@@ -17,3 +17,6 @@ Use sites:
     a + b = b [4m+[0m a
   Definition used: 2
     a + b = b + [4ma[0m
+
+Exports:
+  +, Value from Infix1

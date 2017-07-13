@@ -37,3 +37,10 @@ Use sites:
       showList lst = [4mshow[0m lst
   Definition used: 8
       showList lst = show [4mlst[0m
+
+Exports:
+  List, Data from Class2
+  Show, Class from Class2
+  String, Data from Class2
+  show, Method from Class2
+  showList, Method from Class2

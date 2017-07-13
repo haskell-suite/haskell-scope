@@ -9,7 +9,7 @@ import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Monoid                  (Monoid (..))
 import           Language.Haskell.Exts.SrcLoc (SrcSpanInfo (..), noSrcSpan)
-import           Language.Haskell.Exts.Syntax
+import           Language.Haskell.Exts.Syntax hiding (NewType)
 
 -- ModuleName -> Interface
 type ResolveEnv = Map String Interface
@@ -31,9 +31,9 @@ lookupInterface = Map.lookup
 
 getModuleName :: Module a -> String
 getModuleName m =
-    case m of
-        Module _ (Just (ModuleHead _ (ModuleName _ name) _ _)) _ _ _ -> name
-        _   -> undefined
+  case m of
+    Module _ (Just (ModuleHead _ (ModuleName _ name) _ _)) _ _ _ -> name
+    _   -> "Main"
 
 
 -----------------------------------------------------------
@@ -43,57 +43,94 @@ data Origin = Origin NameInfo SrcSpanInfo
     deriving ( Eq, Ord, Show )
 
 data NameInfo
-    = Resolved GlobalName
-    | Binding GlobalName
+    = Resolved Entity
+    | Binding Entity
     | None
     | ScopeError ScopeError
     deriving ( Show, Eq, Ord )
 
-type Location = [String]
+data Entity = Entity
+  { entityLocation :: Location
+  , entitySrcSpan  :: SrcSpanInfo
+  , entityName     :: QualifiedName
+  , entityKind     :: EntityKind
+  } deriving ( Show, Eq, Ord )
 
-data GlobalName = GlobalName Location SrcSpanInfo QualifiedName
+entityNamespace :: Entity -> RNamespace
+entityNamespace = entityKindNamespace . entityKind
+
+data EntityKind
+  = Value
+  | Method
+  | Selector
+  | Constructor
+  | Type
+  | TypeVariable
+  | Data
+  | NewType
+  | TypeFamily
+  | DataFamily
+  | Class
+  | PatternConstructor
+  | PatternSelector
     deriving ( Show, Eq, Ord )
 
-globalNameSrcSpanInfo :: GlobalName -> SrcSpanInfo
-globalNameSrcSpanInfo (GlobalName _ src _) = src
+entityKindNamespace :: EntityKind -> RNamespace
+entityKindNamespace eKind =
+  case eKind of
+    Value -> NsValues
+    Method -> NsValues
+    Selector -> NsValues
+    Constructor -> NsValues
+    Type -> NsTypes
+    TypeVariable -> NsTypeVariables
+    Data -> NsTypes
+    NewType -> NsTypes
+    TypeFamily -> NsTypes
+    DataFamily -> NsTypes
+    Class -> NsTypes
+    PatternConstructor -> NsTypes
+    PatternSelector -> NsTypes
 
-globalNameIdentifier :: GlobalName -> String
-globalNameIdentifier (GlobalName _ _ (QualifiedName _mod ident)) = ident
+type Location = [String]
 
--- data Fixity = Fixity Assoc (Maybe Precedence) GlobalName
--- data Assoc = AssocNone | AssocLeft | AssocRight
--- type Precedence = Int
+-- data GlobalName = GlobalName Location SrcSpanInfo QualifiedName
+--     deriving ( Show, Eq, Ord )
 
-data Interface =
-    Interface
-    { ifaceValues       :: [GlobalName]
-    -- , ifaceFixities     :: [Fixity]
-    , ifaceTypes        :: [(GlobalName, [GlobalName])]
-    , ifaceConstructors :: [(GlobalName, [GlobalName])]
-    , ifaceClasses      :: [(GlobalName, [GlobalName])]
-    }
+data QualifiedName = QualifiedName
+    { qnameModule     :: String
+    , qnameIdentifier :: String }
+    deriving ( Eq, Ord, Show )
+
+-- globalNameSrcSpanInfo :: GlobalName -> SrcSpanInfo
+-- globalNameSrcSpanInfo (GlobalName _ src _) = src
+
+-- globalNameIdentifier :: GlobalName -> String
+-- globalNameIdentifier (GlobalName _ _ (QualifiedName _mod ident)) = ident
+
+entityNameIdentifier :: Entity -> String
+entityNameIdentifier Entity{entityName=QualifiedName _mod ident} = ident
+
+type Interface = [Entity]
 
 -- Used for error reporting.
 data Source
     = ImplicitSource -- Imported implicitly, usually from Prelude.
     | LocalSource -- Not imported, defined locally.
-    | ModuleSource (ModuleName Origin)
+    | ModuleSource (ModuleName Origin) -- FIXME: Change to String
     deriving ( Eq, Ord, Show )
-data ScopedName = ScopedName Source GlobalName
+
+data ScopedName = ScopedName Source Entity
     deriving ( Eq, Ord, Show )
 
 data ScopeError
-    = ENotInScope SrcSpanInfo QualifiedName RNamespace
+    = ENotInScope SrcSpanInfo QualifiedName EntityKind
     | EAmbiguous SrcSpanInfo [ScopedName]
     | EConflicting [ScopedName]
     | ETypeAsClass
     | ENotExported
     | EModNotFound
     | EInternal
-    deriving ( Eq, Ord, Show )
-data QualifiedName = QualifiedName
-    { qnameModule     :: String
-    , qnameIdentifier :: String }
     deriving ( Eq, Ord, Show )
 data RNamespace
     = NsTypes
@@ -106,7 +143,6 @@ data Scope = Scope
     --      Sigh.
     , scopeTyVars :: Map QualifiedName [ScopedName]
     , scopeValues :: Map QualifiedName [ScopedName]
-    -- , scopeErrors :: [ScopeError]
     }
 
 emptyScope :: Scope
@@ -114,6 +150,17 @@ emptyScope = Scope
     { scopeTypes        = Map.empty
     , scopeTyVars       = Map.empty
     , scopeValues       = Map.empty}
+
+localEntities :: Scope -> [Entity]
+localEntities (Scope tys tyvars values) =
+    concatMap getLocals $
+      Map.elems tys ++
+      Map.elems tyvars ++
+      Map.elems values
+  where
+    getLocals [] = []
+    getLocals (ScopedName LocalSource entity:xs) = entity:getLocals xs
+    getLocals (_:xs) = getLocals xs
 
 -- Bah, come up with a better name than 'Out'
 data Out = Out Scope [ScopeError]
@@ -164,8 +211,8 @@ type Resolve a = a SrcSpanInfo -> Rename (a Origin)
 -----------------------------------------------------------
 -- Utilities
 
-runRename :: ResolveEnv -> Rename a -> ([ScopeError], a)
-runRename resolveEnv action = (errs, a)
+runRename :: ResolveEnv -> Rename a -> (Scope, [ScopeError], a)
+runRename resolveEnv action = (scope, errs, a)
   where
     (a, Out scope errs) = runWriter (runReaderT (unRename action) readerEnv)
     readerEnv = ReaderEnv
@@ -235,14 +282,15 @@ addToScope :: Source -> String -> Interface -> Rename ()
 addToScope src modName iface =
     tell $ Out emptyScope
         { scopeTypes = Map.fromList
-            [ (QualifiedName modName ident, [ScopedName src gname])
-            | (gname, _) <- ifaceTypes iface
-            , let ident = globalNameIdentifier gname ]
-                   -- :: Map QualifiedName [ScopedName]
+            [ (QualifiedName modName ident, [ScopedName src entity])
+            | entity <- iface
+            , entityNamespace entity == NsTypes
+            , let ident = entityNameIdentifier entity ]
         , scopeValues = Map.fromList
-            [ (QualifiedName modName ident, [ScopedName src gname])
-            | gname <- ifaceValues iface
-            , let ident = globalNameIdentifier gname]
+            [ (QualifiedName modName ident, [ScopedName src entity])
+            | entity <- iface
+            , entityNamespace entity == NsValues
+            , let ident = entityNameIdentifier entity]
         } []
 
 withLimitedScope :: Interface -> Rename a -> Rename a
@@ -308,3 +356,23 @@ getNameIdentifier (Symbol _ symbol) = symbol
 matchName :: Match l -> Name l
 matchName (Match _span name _pats _rhs _binds) = name
 matchName (InfixMatch _span _left name _right _rhs _binds) = name
+
+qnameToEntity :: QName Origin -> Maybe Entity
+qnameToEntity qname =
+    case qname of
+      Qual _src _mod name      -> expectResolved (ann name)
+      UnQual _src name         -> expectResolved (ann name)
+      Special _src _specialCon -> Nothing
+  where
+    expectResolved :: Origin -> Maybe Entity
+    expectResolved (Origin (Resolved entity) _) = Just entity
+    -- expectResolved (Origin (Binding entity) _) = Just entity
+    expectResolved _ = Nothing
+
+nameToEntity :: Name Origin -> Maybe Entity
+nameToEntity name = expectResolved (ann name)
+  where
+    expectResolved :: Origin -> Maybe Entity
+    expectResolved (Origin (Resolved entity) _) = Just entity
+    -- expectResolved (Origin (Binding entity) _) = Just entity
+    expectResolved _ = Nothing

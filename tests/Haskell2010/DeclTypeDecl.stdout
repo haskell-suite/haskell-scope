@@ -37,3 +37,9 @@ Use sites:
     type (Parens) a = [4mDHead[0m a
   Definition used: 9
     type (Parens) a = DHead [4ma[0m
+
+Exports:
+  DHead, Type from DeclTypeDecl
+  Infix1, Type from DeclTypeDecl
+  Infix2, Type from DeclTypeDecl
+  Parens, Type from DeclTypeDecl

@@ -41,3 +41,15 @@ Use sites:
                  ,void6,void7,[4mvoid8[0m,void9]
   Definition used: 9
                  ,void6,void7,void8,[4mvoid9[0m]
+
+Exports:
+  collection, Value from DeclForImp
+  void1, Value from DeclForImp
+  void2, Value from DeclForImp
+  void3, Value from DeclForImp
+  void4, Value from DeclForImp
+  void5, Value from DeclForImp
+  void6, Value from DeclForImp
+  void7, Value from DeclForImp
+  void8, Value from DeclForImp
+  void9, Value from DeclForImp

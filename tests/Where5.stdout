@@ -24,3 +24,7 @@ Use sites:
       where b = [4mb[0m
   Definition used: 4
     [4ma'[0m x = b
+
+Exports:
+  a, Value from Where5
+  a', Value from Where5

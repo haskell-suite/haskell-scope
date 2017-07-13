@@ -41,3 +41,9 @@ Use sites:
     instance forall a. Show a => Show ([4mList[0m a)
   Definition used: 7
     instance forall a. Show a => Show (List [4ma[0m)
+
+Exports:
+  List, Data from Instance2
+  Show, Class from Instance2
+  String, Data from Instance2
+  show, Method from Instance2

@@ -69,3 +69,15 @@ Use sites:
       | [4mTrue[0m = False
   Definition used: 3
       | True = [4mFalse[0m
+
+Exports:
+  Bool, Data from DeclPatBind
+  Maybe, Data from DeclPatBind
+  False, Constructor from DeclPatBind
+  Just, Constructor from DeclPatBind
+  Nothing, Constructor from DeclPatBind
+  True, Constructor from DeclPatBind
+  a, Value from DeclPatBind
+  b, Value from DeclPatBind
+  d, Value from DeclPatBind
+  e, Value from DeclPatBind

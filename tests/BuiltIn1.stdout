@@ -21,3 +21,8 @@ Use sites:
     [4mz[0m [x] = x
   Definition used: 4
     z [x] = [4mx[0m
+
+Exports:
+  x, Value from BuiltIn1
+  y, Value from BuiltIn1
+  z, Value from BuiltIn1

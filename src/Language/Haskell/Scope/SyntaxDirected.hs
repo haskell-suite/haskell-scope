@@ -16,17 +16,11 @@ import           Language.Haskell.Scope.Monad
 -----------------------------------------------------------
 -- Name binding and resolution
 
--- FIXME: Use ETypeNotInScope, EConstructorNotInScope, etc.
-resolveName :: RNamespace -> Resolve Name
+resolveName :: EntityKind -> Resolve Name
 resolveName = resolveName' ""
 
-resolveName' :: String -> RNamespace -> Resolve Name
-resolveName' = resolveName'' IsNotTv
-
-data IsTv = IsTv | IsNotTv
-
-resolveName'' :: IsTv -> String -> RNamespace -> Resolve Name
-resolveName'' isTv qualification ns name =
+resolveName' :: String -> EntityKind -> Resolve Name
+resolveName' qualification eKind name =
     con <$> getScoped <*> pure nameString
   where
     (con, src, nameString) =
@@ -40,11 +34,11 @@ resolveName'' isTv qualification ns name =
         loc <- getLocation
         let ret = case Map.lookup qname m of
                 Nothing ->
-                    case isTv of
-                        IsNotTv ->
-                            Left (ENotInScope src qname ns)
-                        IsTv ->
-                            Right (ScopedName LocalSource (GlobalName loc src qname))
+                    case eKind of
+                        TypeVariable ->
+                            Right (ScopedName LocalSource (Entity loc src qname eKind))
+                        _notTypeVariable ->
+                            Left (ENotInScope src qname eKind)
                 Just [var] -> Right var
                 Just vars  -> Left (EAmbiguous src vars)
             nameInfo =
@@ -57,24 +51,24 @@ resolveName'' isTv qualification ns name =
               Right{}  -> []
         return $ Origin nameInfo src
     getScoped =
-        case ns of
+        case entityKindNamespace eKind of
             NsValues        -> worker scopeValues
             NsTypes         -> worker scopeTypes
             NsTypeVariables -> worker scopeTyVars
 
 resolveTyVar :: Resolve Name
 resolveTyVar name =
-  pushLocation "tv" $ resolveName'' IsTv "" NsTypeVariables name
+  pushLocation "tv" $ resolveName' "" TypeVariable name
 
-resolveQName :: RNamespace -> Resolve QName
-resolveQName ns qname =
+resolveQName :: EntityKind -> Resolve QName
+resolveQName eKind qname =
     case qname of
         Qual src (ModuleName l m) name ->
             Qual (Origin None src)
                 <$> pure (ModuleName (Origin None l) m)
-                <*> resolveName' m ns name
+                <*> resolveName' m eKind name
         UnQual src name -> do
-            name' <- resolveName ns name
+            name' <- resolveName eKind name
             -- let Origin origin _ = ann name'
             UnQual (Origin None src)
                 <$> pure name'
@@ -82,38 +76,38 @@ resolveQName ns qname =
             Special (Origin None src)
                 <$> resolveSpecialCon specialCon
 
-defineName :: RNamespace -> Resolve Name
-defineName ns name = do
+defineName :: EntityKind -> Resolve Name
+defineName eKind name = do
     thisModule <- asks readerModuleName
     loc <- getLocation
     let src = ann name
         qname = QualifiedName "" ident
-        gname = GlobalName loc src (QualifiedName thisModule ident)
-        resolved = ScopedName LocalSource gname
-    case ns of
+        entity = Entity loc src (QualifiedName thisModule ident) eKind
+        resolved = ScopedName LocalSource entity
+    case entityKindNamespace eKind of
         NsValues        -> tellScopeValue qname resolved
         NsTypes         -> tellScopeType qname resolved
         NsTypeVariables -> tellScopeTyVar qname resolved
-    return $ con (Origin (Binding gname) src) ident
+    return $ con (Origin (Binding entity) src) ident
   where
     (con, src, ident) =
       case name of
           Ident a b  -> (Ident, a, b)
           Symbol a b -> (Symbol, a, b)
 
-defineMultiName :: RNamespace -> SrcSpanInfo -> Name SrcSpanInfo -> (Name Origin -> Rename a) -> Rename a
-defineMultiName ns bindingSrc name cont = do
+defineMultiName :: EntityKind -> SrcSpanInfo -> Name SrcSpanInfo -> (Name Origin -> Rename a) -> Rename a
+defineMultiName eKind bindingSrc name cont = do
     thisModule <- asks readerModuleName
     loc <- getLocation
     let qname = QualifiedName "" ident
-        gname = GlobalName loc bindingSrc (QualifiedName thisModule ident)
-        resolved = ScopedName LocalSource gname
-    case ns of
+        entity = Entity loc src (QualifiedName thisModule ident) eKind
+        resolved = ScopedName LocalSource entity
+    case entityKindNamespace eKind of
         NsValues        -> tellScopeValue qname resolved
         NsTypes         -> tellScopeType qname resolved
         NsTypeVariables -> tellScopeTyVar qname resolved
     restrictScope qname resolved
-      (cont $ con (Origin (Binding gname) src) ident)
+      (cont $ con (Origin (Binding entity) src) ident)
   where
     (con, src, ident) =
       case name of
@@ -149,37 +143,37 @@ resolveTyVarBind tyVarBind =
         KindedVar src name kind ->
             KindedVar
                 <$> pure (Origin None src)
-                <*> defineName NsTypeVariables name
+                <*> defineName TypeVariable name
                 <*> resolveKind kind
         UnkindedVar src name    ->
             UnkindedVar
                 <$> pure (Origin None src)
-                <*> defineName NsTypeVariables name
+                <*> defineName TypeVariable name
 
-resolveDeclHead :: Resolve DeclHead
-resolveDeclHead dhead =
+resolveDeclHead :: EntityKind -> Resolve DeclHead
+resolveDeclHead eKind dhead =
   case dhead of
     DHApp src dh tyVarBind ->
       DHApp (Origin None src)
-        <$> resolveDeclHead dh
+        <$> resolveDeclHead eKind dh
         <*> resolveTyVarBind tyVarBind
     DHead src name ->
       DHead (Origin None src)
-        <$> defineName NsTypes name
+        <$> defineName eKind name
     DHInfix src tyVarBind name ->
       DHInfix (Origin None src)
         <$> resolveTyVarBind tyVarBind
-        <*> defineName NsTypes name
+        <*> defineName eKind name
     DHParen src next ->
       DHParen (Origin None src)
-        <$> resolveDeclHead next
+        <$> resolveDeclHead eKind next
 
 resolveAsst :: Resolve Asst
 resolveAsst asst =
     case asst of
         ClassA src qname tys ->
             ClassA (Origin None src)
-                <$> resolveQName NsTypes qname
+                <$> resolveQName Class qname
                 <*> mapM resolveType tys
         _ -> error "resolveAsst"
 
@@ -205,11 +199,11 @@ resolveInstHead instHead =
     case instHead of
         IHCon src qname ->
             IHCon (Origin None src)
-                <$> resolveQName NsTypes qname
+                <$> resolveQName Class qname
         IHInfix src ty qname ->
             IHInfix (Origin None src)
                 <$> resolveType ty
-                <*> resolveQName NsTypes qname
+                <*> resolveQName Class qname
         IHApp src subHead ty ->
             IHApp (Origin None src)
                 <$> resolveInstHead subHead
@@ -251,7 +245,7 @@ resolveType ty =
   case ty of
     TyCon src qname ->
       TyCon (Origin None src)
-        <$> resolveQName NsTypes qname
+        <$> resolveQName Type qname
     TyVar src tyVar ->
       TyVar (Origin None src)
         <$> resolveTyVar tyVar
@@ -269,7 +263,7 @@ resolveType ty =
     TyInfix src l qname r ->
       TyInfix (Origin None src)
         <$> resolveType l
-        <*> resolveQName NsTypes qname
+        <*> resolveQName Type qname
         <*> resolveType r
     TyTuple src boxed tys ->
       TyTuple (Origin None src) boxed
@@ -297,7 +291,7 @@ resolveFieldDecl fieldDecl =
     case fieldDecl of
         FieldDecl src names ty ->
             FieldDecl (Origin None src)
-                <$> mapM (defineName NsValues) names
+                <$> mapM (defineName Selector) names
                 <*> resolveType ty
 
 resolveConDecl :: Resolve ConDecl
@@ -305,11 +299,11 @@ resolveConDecl conDecl =
     case conDecl of
         ConDecl src name tys ->
             ConDecl (Origin None src)
-                <$> defineName NsValues name
+                <$> defineName Constructor name
                 <*> mapM resolveType tys
         RecDecl src name fieldDecls ->
             RecDecl (Origin None src)
-                <$> defineName NsValues name
+                <$> defineName Constructor name
                 <*> mapM resolveFieldDecl fieldDecls
         _ -> error "resolveConDecl"
 
@@ -334,16 +328,16 @@ resolvePat pat =
       case rContext of
         ResolveToplevel ->
           PVar (Origin None src)
-            <$> defineName NsValues name
+            <$> defineName Value name
         ResolveClass ->
           PVar (Origin None src)
-            <$> resolveName NsValues name
+            <$> resolveName Value name
         ResolveInstance ->
           PVar (Origin None src)
-            <$> resolveName NsValues name
+            <$> resolveName Value name
     PApp src con pats ->
       PApp (Origin None src)
-        <$> resolveQName NsValues con
+        <$> resolveQName Constructor con
         <*> mapM resolvePat pats
     PWildCard src ->
       pure $ PWildCard (Origin None src)
@@ -363,7 +357,7 @@ resolvePat pat =
     PInfixApp src a con b ->
       PInfixApp (Origin None src)
         <$> resolvePat a
-        <*> resolveQName NsValues con
+        <*> resolveQName Constructor con
         <*> resolvePat b
     _ -> error $ "resolvePat: " ++ prettyPrint pat
 
@@ -399,10 +393,10 @@ resolveQOp qop =
     case qop of
         QVarOp src qname ->
             QVarOp (Origin None src)
-                <$> resolveQName NsValues qname
+                <$> resolveQName Value qname
         QConOp src qname ->
             QConOp (Origin None src)
-                <$> resolveQName NsValues qname
+                <$> resolveQName Constructor qname
 
 resolveLiteral :: Resolve Literal
 resolveLiteral lit = pure $
@@ -453,11 +447,11 @@ resolveFieldUpdate upd =
   case upd of
     FieldUpdate src qname expr ->
       FieldUpdate (Origin None src)
-        <$> resolveQName NsValues qname
+        <$> resolveQName Selector qname
         <*> resolveExp expr
     FieldPun src qname ->
       FieldPun (Origin None src)
-        <$> resolveQName NsValues qname
+        <$> resolveQName Selector qname
     FieldWildcard src -> pure $ FieldWildcard (Origin None src)
 
 resolveExp :: Resolve Exp
@@ -465,10 +459,10 @@ resolveExp expr = ask >>= \env -> env `seq`
   case expr of
     Var src qname ->
       Var (Origin None src)
-        <$> resolveQName NsValues qname
+        <$> resolveQName Value qname
     Con src qname ->
       Con (Origin None src)
-        <$> resolveQName NsValues qname
+        <$> resolveQName Constructor qname
     Lit src lit ->
       Lit (Origin None src)
         <$> resolveLiteral lit
@@ -514,9 +508,11 @@ resolveExp expr = ask >>= \env -> env `seq`
       Paren (Origin None src)
         <$> resolveExp sub
     -- FIXME: How the field updates are resolved depends on the qname, I think.
+    -- XXX: Nah, but it's an error to refer to anything other than a selector
+    --      of the right type.
     RecConstr src qname fieldUpdates ->
       RecConstr (Origin None src)
-        <$> resolveQName NsValues qname
+        <$> resolveQName Constructor qname
         <*> mapM resolveFieldUpdate fieldUpdates
     RecUpdate src sub fieldUpdates ->
       RecUpdate (Origin None src)
@@ -569,14 +565,14 @@ resolveMatch :: Resolve Match
 resolveMatch match =
   case match of
     Match src name pats rhs mbBinds -> do
-      name' <- resolveName NsValues name
+      name' <- resolveName Value name
       pats' <- mapM resolvePat pats
       limitScope "rhs" $
         Match (Origin None src) name' pats'
           <$> resolveRhs rhs
           <*> resolveMaybe resolveBinds mbBinds
     InfixMatch src leftPat name rightPats rhs mbBinds -> do
-      name' <- resolveName NsValues name
+      name' <- resolveName Value name
       leftPat' <- resolvePat leftPat
       rightPats' <- mapM resolvePat rightPats
       limitScope "rhs" $
@@ -595,8 +591,8 @@ resolveClassDecl decl =
 resolveFunDep :: Resolve FunDep
 resolveFunDep (FunDep src lhs rhs) =
   FunDep (Origin None src)
-    <$> mapM (resolveName NsTypeVariables) lhs
-    <*> mapM (resolveName NsTypeVariables) rhs
+    <$> mapM (resolveName TypeVariable) lhs
+    <*> mapM (resolveName TypeVariable) rhs
 
 resolveInstDecl :: Resolve InstDecl
 resolveInstDecl inst =
@@ -622,8 +618,8 @@ resolveAssoc assoc = pure $
 resolveOp :: Resolve Op
 resolveOp op =
   case op of
-    VarOp src name -> VarOp (Origin None src) <$> resolveName NsValues name
-    ConOp src name -> ConOp (Origin None src) <$> resolveName NsValues name
+    VarOp src name -> VarOp (Origin None src) <$> resolveName Value name
+    ConOp src name -> ConOp (Origin None src) <$> resolveName Constructor name
 
 resolveDecl :: Resolve Decl
 resolveDecl decl = do
@@ -634,7 +630,7 @@ resolveDecl decl = do
       DataDecl (Origin None src)
           <$> resolveDataOrNew isNewtype
           <*> resolveMaybe resolveContext ctx
-          <*> resolveDeclHead dhead
+          <*> resolveDeclHead Data dhead
           <*> mapM resolveQualConDecl cons
           <*> resolveMaybe resolveDeriving derive
     FunBind src matches -> localContext ResolveToplevel $ do
@@ -643,12 +639,12 @@ resolveDecl decl = do
       -- we use their type signature.
       case rContext of
         ResolveToplevel ->
-          defineMultiName NsValues src (matchName $ head matches) $ \name -> do
+          defineMultiName Value src (matchName $ head matches) $ \name -> do
             let Origin info _ = ann name
             FunBind (Origin info src)
                 <$> mapMWithLimit "match" resolveMatch matches
         _               -> do
-          name <- resolveName NsValues (matchName $ head matches)
+          name <- resolveName Value (matchName $ head matches)
           let Origin info _ = ann name
           FunBind (Origin info src)
               <$> mapMWithLimit "match" resolveMatch matches
@@ -668,16 +664,16 @@ resolveDecl decl = do
     TypeSig src names ty | rContext == ResolveToplevel ->
       -- FIXME: Bind tyvars to the src of the definition, not the tysig.
       TypeSig (Origin None src)
-          <$> mapM (resolveName NsValues) names
+          <$> mapM (resolveName Value) names
           <*> resolveType ty
     TypeSig src names ty | rContext == ResolveClass ->
       TypeSig (Origin None src)
-          <$> mapM (defineName NsValues) names
+          <$> mapM (defineName Method) names
           <*> resolveType ty
     ClassDecl src ctx dhead deps decls -> limitTyVarScope "class" $
       ClassDecl (Origin None src)
           <$> resolveMaybe resolveContext ctx
-          <*> resolveDeclHead dhead
+          <*> resolveDeclHead Class dhead
           <*> mapM resolveFunDep deps
           <*> resolveMaybe (mapM resolveClassDecl) decls
 
@@ -693,16 +689,16 @@ resolveDecl decl = do
           <$> resolveCallConv conv
           <*> resolveMaybe resolveSafety safety
           <*> pure ident
-          <*> defineName NsValues name
+          <*> defineName Value name
           <*> resolveType ty
     InlineSig src noInline mbActivation qname ->
       InlineSig (Origin None src) noInline
           <$> resolveMaybe resolveActivation mbActivation
-          <*> resolveQName NsValues qname
+          <*> resolveQName Value qname
 
     TypeDecl src dhead ty -> limitTyVarScope "type" $
       TypeDecl (Origin None src)
-          <$> resolveDeclHead dhead
+          <$> resolveDeclHead Type dhead
           <*> resolveType ty
 
     InfixDecl src assoc precedence ops ->
@@ -732,9 +728,9 @@ resolveCName :: Resolve CName
 resolveCName cname =
   case cname of
     ConName src name ->
-      ConName (Origin None src) <$> resolveName NsValues name
+      ConName (Origin None src) <$> resolveName Constructor name
     VarName src name ->
-      VarName (Origin None src) <$> resolveName NsValues name
+      VarName (Origin None src) <$> resolveName Value name
 
 resolveEWildcard :: Resolve EWildcard
 resolveEWildcard wildcard =
@@ -747,14 +743,13 @@ resolveExportSpec spec =
   case spec of
     EVar src qname ->
       EVar (Origin None src)
-        -- <$> resolveNamespace ns
-        <$> resolveQName NsValues qname
+        <$> resolveQName Value qname
     EAbs src ns qname ->
-      EAbs (Origin None src) <$> resolveNamespace ns <*> resolveQName NsTypes qname
+      EAbs (Origin None src) <$> resolveNamespace ns <*> resolveQName Type qname
     EThingWith src wild qname cnames ->
       EThingWith (Origin None src)
         <$> resolveEWildcard wild
-        <*> resolveQName NsTypes qname
+        <*> resolveQName Type qname
         <*> mapM resolveCName cnames
     EModuleContents src modName ->
       EModuleContents (Origin None src)
@@ -789,7 +784,7 @@ resolveImportSpec spec =
   case spec of
     IVar src name ->
       IVar (Origin None src)
-        <$> resolveName NsValues name
+        <$> resolveName Value name
     _ -> error "Language.Haskell.Scope.resolveImportSpec"
 
 resolveImportSpecList :: Resolve ImportSpecList

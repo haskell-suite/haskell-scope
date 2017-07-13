@@ -29,3 +29,8 @@ Use sites:
       show x = [4mshow[0m x
   Definition used: 5
       show x = show [4mx[0m
+
+Exports:
+  Show, Class from Instance1
+  String, Data from Instance1
+  show, Method from Instance1

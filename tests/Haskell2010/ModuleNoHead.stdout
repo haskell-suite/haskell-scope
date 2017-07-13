@@ -7,3 +7,6 @@ Definitions:
 Use sites:
   Definition used: 1
     main = [4mmain[0m
+
+Exports:
+  main, Value from Main

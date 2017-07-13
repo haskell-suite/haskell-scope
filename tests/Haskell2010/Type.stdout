@@ -99,3 +99,16 @@ Use sites:
     tyinfix :: a `Maybe` [4mb[0m
   Definition used: 13
     tyinfix = [4mtyinfix[0m
+
+Exports:
+  Int, Data from Type
+  Maybe, Data from Type
+  Show, Class from Type
+  forall, Value from Type
+  tyapp, Value from Type
+  tycon, Value from Type
+  tyfun, Value from Type
+  tyinfix, Value from Type
+  tylist, Value from Type
+  typaren, Value from Type
+  tytuple, Value from Type

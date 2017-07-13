@@ -31,3 +31,10 @@ Use sites:
       [4mshowList[0m = show
   Definition used: 6
       showList = [4mshow[0m
+
+Exports:
+  List, Data from Class3
+  Show, Class from Class3
+  String, Data from Class3
+  show, Method from Class3
+  showList, Method from Class3

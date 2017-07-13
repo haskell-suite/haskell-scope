@@ -17,3 +17,8 @@ Use sites:
       myClassMethod :: a -> [4ma[0m
   Definition used: 3
     fn = [4mmyClassMethod[0m
+
+Exports:
+  MyClass, Class from Class1
+  fn, Value from Class1
+  myClassMethod, Method from Class1

@@ -23,3 +23,14 @@ Definitions:
 Use sites:
   Definition used: 7
     data Int = I# [4mInt#[0m
+
+Exports:
+  Int, Data from MagicHash
+  Int#, Data from MagicHash
+  I#, Constructor from MagicHash
+  primchar, Value from MagicHash
+  primdouble, Value from MagicHash
+  primfloat, Value from MagicHash
+  primint, Value from MagicHash
+  primstring, Value from MagicHash
+  primword, Value from MagicHash

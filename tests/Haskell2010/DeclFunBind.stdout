@@ -141,3 +141,18 @@ Use sites:
     not [4mFalse[0m = True
   Definition used: 2
     not False = [4mTrue[0m
+
+Exports:
+  Bool, Data from DeclFunBind
+  Maybe, Data from DeclFunBind
+  +, Value from DeclFunBind
+  -, Value from DeclFunBind
+  /, Value from DeclFunBind
+  //, Value from DeclFunBind
+  False, Constructor from DeclFunBind
+  Just, Constructor from DeclFunBind
+  Nothing, Constructor from DeclFunBind
+  True, Constructor from DeclFunBind
+  id, Value from DeclFunBind
+  infix1, Value from DeclFunBind
+  not, Value from DeclFunBind

@@ -37,3 +37,12 @@ Use sites:
     sum x = field1 x + [4mfield2[0m x
   Definition used: 8
     sum x = field1 x + field2 [4mx[0m
+
+Exports:
+  Int, Data from Records1
+  Records, Data from Records1
+  +, Value from Records1
+  Records, Constructor from Records1
+  field1, Selector from Records1
+  field2, Selector from Records1
+  sum, Value from Records1

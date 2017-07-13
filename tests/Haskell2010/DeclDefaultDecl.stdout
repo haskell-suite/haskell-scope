@@ -11,3 +11,7 @@ Use sites:
     default ([4mA[0m,B)
   Definition used: 2
     default (A,[4mB[0m)
+
+Exports:
+  A, Data from DeclDefault
+  B, Data from DeclDefault

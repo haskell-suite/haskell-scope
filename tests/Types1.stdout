@@ -1,5 +1,6 @@
 Scope errors:
-  Type not in scope.
+  Class not in scope:
+    z :: [4mShow[0m c => c
 
 Definitions:
   Definition 1, from Types1.decl1:
@@ -56,3 +57,10 @@ Use sites:
     g :: a -> forall a. [4ma[0m
   Definition used: 7
     g = [4mg[0m
+
+Exports:
+  f, Value from Types1
+  g, Value from Types1
+  x, Value from Types1
+  y, Value from Types1
+  z, Value from Types1

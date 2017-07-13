@@ -29,3 +29,8 @@ Use sites:
     class FunDep3 a b | -> [4ma[0m b
   Definition used: 8
     class FunDep3 a b | -> a [4mb[0m
+
+Exports:
+  FunDep1, Class from FunctionalDependencies
+  FunDep2, Class from FunctionalDependencies
+  FunDep3, Class from FunctionalDependencies

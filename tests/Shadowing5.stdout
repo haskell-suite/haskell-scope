@@ -13,3 +13,6 @@ Use sites:
     x = case [4mx[0m of
   Definition used: 2
           x -> [4mx[0m
+
+Exports:
+  x, Value from Shadowing4

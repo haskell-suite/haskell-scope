@@ -1,0 +1,51 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from ModuleExports.decl0:
+    [4meVar[0m = eVar
+  Definition 2, from ModuleExports.decl1:
+    data [4mEAbs[0m
+  Definition 3, from ModuleExports.decl2:
+    data [4mEThingWith[0m = Some | Other
+  Definition 4, from ModuleExports.decl2:
+    data EThingWith = [4mSome[0m | Other
+  Definition 5, from ModuleExports.decl2:
+    data EThingWith = Some | [4mOther[0m
+  Definition 6, from ModuleExports.decl3:
+    class [4mEClass[0m a where
+  Definition 7, from ModuleExports.decl3:
+    class EClass [4ma[0m where
+  Definition 8, from ModuleExports.decl3:
+      [4mexported[0m :: a
+  Definition 9, from ModuleExports.decl3:
+      [4mnotExported[0m :: a
+
+Use sites:
+  Definition used: 1
+      ( [4meVar[0m
+  Definition used: 2
+      , [4mEAbs[0m
+  Definition used: 3
+      , [4mEThingWith[0m(Some)
+  Definition used: 4
+      , EThingWith([4mSome[0m)
+  Definition used: 3
+      , [4mEThingWith[0m(..)
+  Definition used: 6
+      , [4mEClass[0m(exported)
+  Definition used: 8
+      , EClass([4mexported[0m)
+  Definition used: 1
+    eVar = [4meVar[0m
+  Definition used: 7
+      exported :: [4ma[0m
+  Definition used: 7
+      notExported :: [4ma[0m
+
+Exports:
+  eVar, Value from ModuleExports
+  Some, Constructor from ModuleExports
+  EThingWith, Data from ModuleExports
+  EThingWith, Data from ModuleExports
+  EClass, Class from ModuleExports
+  EAbs, Data from ModuleExports

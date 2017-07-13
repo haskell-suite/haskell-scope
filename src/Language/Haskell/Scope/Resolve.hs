@@ -37,7 +37,8 @@ module Language.Haskell.Scope.Resolve
 
     , Origin(..)
     , NameInfo(..)
-    , GlobalName(..)
+    , Entity(..)
+    , EntityKind(..)
     , QualifiedName(..)
     , RNamespace(..)
     , Interface(..)
@@ -56,36 +57,31 @@ import           Language.Haskell.Exts.Syntax
 import           Language.Haskell.Scope.Monad
 import           Language.Haskell.Scope.SyntaxDirected
 
-deriveInterface :: Module Origin -> Interface
-deriveInterface m =
+deriveInterface :: Scope -> Module Origin -> Interface
+deriveInterface scope m =
     case m of
         Module _ (Just (ModuleHead _ _ _ (Just (ExportSpecList _ exports)))) _ _ _ ->
-            Interface
-            { ifaceValues =
-                [ gname
-                | EVar _ qname <- exports
-                , Origin (Resolved gname) _ <- [ann qname] ] ++
-                [ gname
-                | EThingWith _ _wild _qname cnames <- exports
-                , ConName _ name <- cnames
-                , Origin (Resolved gname) _ <- [ann name] ]
-
-            , ifaceTypes =
-                [ (gname, [])
-                | EAbs _ _ns qname <- exports
-                , Origin (Resolved gname) _ <- [ann qname] ] ++
-                [ (gname, [])
-                | EThingWith _ _wild qname _cnames <- exports
-                , Origin (Resolved gname) _ <- [ann qname] ]
-            , ifaceConstructors = []
-            , ifaceClasses = []
-            }
+            [ entity
+            | EVar _ qname <- exports
+            , Just entity  <- [qnameToEntity qname] ] ++
+            [ entity
+            | EThingWith _ _wild _qname cnames <- exports
+            , ConName _ name <- cnames
+            , Just entity <- [nameToEntity name] ] ++
+            [ entity
+            | EThingWith _ _wild qname _cnames <- exports
+            , Just entity <- [qnameToEntity qname] ] ++
+            [ entity
+            | EAbs _ _ns qname <- exports
+            , Just entity <- [qnameToEntity qname] ]
+        Module _ _ _ _ _ -> -- We don't have a module head or an export spec list.
+          localEntities scope
         _ -> error "Language.Haskell.Scope.deriveInterface: undefined"
 
 -- Resolve all names in a module
 resolve :: ResolveEnv -> Module SrcSpanInfo -> (ResolveEnv, [ScopeError], Module Origin)
 resolve resolveEnv m =
-    let (errs, m') = runRename resolveEnv $ resolveModule m
-        iface = deriveInterface m'
+    let (scope, errs, m') = runRename resolveEnv $ resolveModule m
+        iface = deriveInterface scope m'
         name = getModuleName m
     in (addInterface name iface resolveEnv, errs, m')
