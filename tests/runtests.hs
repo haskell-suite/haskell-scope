@@ -65,6 +65,8 @@ unitTests =
   , scopeTest "Records2"
   , testGroup "Haskell2010"
     [ scopeTest "Haskell2010/Exp"
+    , scopeTest "Haskell2010/Pat"
+    , scopeTest "Haskell2010/Type"
     , scopeTest "Haskell2010/ModuleNoHead"
     , scopeTest "Haskell2010/ModuleNoExports"
     , scopeTest "Haskell2010/ModuleExports"
@@ -77,7 +79,6 @@ unitTests =
     , scopeTest "Haskell2010/DeclTypeDecl"
     , scopeTest "Haskell2010/DeclTypeSig"
     , scopeTest "Haskell2010/DeclInfixDecl"
-    , scopeTest "Haskell2010/Type"
     ]
   , testGroup "Extensions"
     [ scopeTest "Extensions/MagicHash"

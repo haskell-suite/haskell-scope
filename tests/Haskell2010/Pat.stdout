@@ -1,0 +1,213 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from Pat.decl0:
+    data [4mList[0m a = Nil | Cons a (List a)
+  Definition 2, from Pat.decl0:
+    data List [4ma[0m = Nil | Cons a (List a)
+  Definition 3, from Pat.decl0:
+    data List a = [4mNil[0m | Cons a (List a)
+  Definition 4, from Pat.decl0:
+    data List a = Nil | [4mCons[0m a (List a)
+  Definition 5, from Pat.decl1:
+    data [4mField[0m = Field { field1 :: (), field2 :: () }
+  Definition 6, from Pat.decl1:
+    data Field = [4mField[0m { field1 :: (), field2 :: () }
+  Definition 7, from Pat.decl1:
+    data Field = Field { [4mfield1[0m :: (), field2 :: () }
+  Definition 8, from Pat.decl1:
+    data Field = Field { field1 :: (), [4mfield2[0m :: () }
+  Definition 9, from Pat.decl2:
+    [4mpvar v = v[0m
+  Definition 10, from Pat.decl2.match0:
+    pvar [4mv[0m = v
+  Definition 11, from Pat.decl3:
+    [4mplit 0 = 0[0m
+    [4mplit (-1) = -0[0m
+    [4mplit 1 = 1[0m
+  Definition 12, from Pat.decl4:
+    [4mpinfix1 (x `Cons` xs) = x : xs[0m
+  Definition 13, from Pat.decl4.match0:
+    pinfix1 ([4mx[0m `Cons` xs) = x : xs
+  Definition 14, from Pat.decl4.match0:
+    pinfix1 (x `Cons` [4mxs[0m) = x : xs
+  Definition 15, from Pat.decl5:
+    [4mpinfix2 (x : xs) = x `Cons` xs[0m
+  Definition 16, from Pat.decl5.match0:
+    pinfix2 ([4mx[0m : xs) = x `Cons` xs
+  Definition 17, from Pat.decl5.match0:
+    pinfix2 (x : [4mxs[0m) = x `Cons` xs
+  Definition 18, from Pat.decl6:
+    [4mpapp1 (Cons x xs) = x : xs[0m
+  Definition 19, from Pat.decl6.match0:
+    papp1 (Cons [4mx[0m xs) = x : xs
+  Definition 20, from Pat.decl6.match0:
+    papp1 (Cons x [4mxs[0m) = x : xs
+  Definition 21, from Pat.decl7:
+    [4mpapp2 ((:) x xs) = x : xs[0m
+  Definition 22, from Pat.decl7.match0:
+    papp2 ((:) [4mx[0m xs) = x : xs
+  Definition 23, from Pat.decl7.match0:
+    papp2 ((:) x [4mxs[0m) = x : xs
+  Definition 24, from Pat.decl8:
+    [4mptuple (a,b,c) = [a,b,c][0m
+  Definition 25, from Pat.decl8.match0:
+    ptuple ([4ma[0m,b,c) = [a,b,c]
+  Definition 26, from Pat.decl8.match0:
+    ptuple (a,[4mb[0m,c) = [a,b,c]
+  Definition 27, from Pat.decl8.match0:
+    ptuple (a,b,[4mc[0m) = [a,b,c]
+  Definition 28, from Pat.decl9:
+    [4mplist [a,b,c] = (a,b,c)[0m
+  Definition 29, from Pat.decl9.match0:
+    plist [[4ma[0m,b,c] = (a,b,c)
+  Definition 30, from Pat.decl9.match0:
+    plist [a,[4mb[0m,c] = (a,b,c)
+  Definition 31, from Pat.decl9.match0:
+    plist [a,b,[4mc[0m] = (a,b,c)
+  Definition 32, from Pat.decl10:
+    [4mpparen ([a,b,c]) = (a,b,c)[0m
+  Definition 33, from Pat.decl10.match0:
+    pparen ([[4ma[0m,b,c]) = (a,b,c)
+  Definition 34, from Pat.decl10.match0:
+    pparen ([a,[4mb[0m,c]) = (a,b,c)
+  Definition 35, from Pat.decl10.match0:
+    pparen ([a,b,[4mc[0m]) = (a,b,c)
+  Definition 36, from Pat.decl11:
+    [4mprec Field{field1=f} = f[0m
+  Definition 37, from Pat.decl11.match0:
+    prec Field{field1=[4mf[0m} = f
+  Definition 38, from Pat.decl12:
+    [4mpaspat lst@(x:xs) = (lst,x,xs)[0m
+  Definition 39, from Pat.decl12.match0:
+    paspat [4mlst[0m@(x:xs) = (lst,x,xs)
+  Definition 40, from Pat.decl12.match0:
+    paspat lst@([4mx[0m:xs) = (lst,x,xs)
+  Definition 41, from Pat.decl12.match0:
+    paspat lst@(x:[4mxs[0m) = (lst,x,xs)
+  Definition 42, from Pat.decl13:
+    [4mpwildcard _ = ()[0m
+  Definition 43, from Pat.decl14:
+    [4mpirrpat ~(x:xs) = (x,xs)[0m
+  Definition 44, from Pat.decl14.match0:
+    pirrpat ~([4mx[0m:xs) = (x,xs)
+  Definition 45, from Pat.decl14.match0:
+    pirrpat ~(x:[4mxs[0m) = (x,xs)
+
+Use sites:
+  Definition used: 2
+    data List a = Nil | Cons [4ma[0m (List a)
+  Definition used: 1
+    data List a = Nil | Cons a ([4mList[0m a)
+  Definition used: 2
+    data List a = Nil | Cons a (List [4ma[0m)
+  Definition used: 9
+    [4mpvar[0m v = v
+  Definition used: 10
+    pvar v = [4mv[0m
+  Definition used: 11
+    [4mplit[0m 0 = 0
+  Definition used: 11
+    [4mplit[0m (-1) = -0
+  Definition used: 11
+    [4mplit[0m 1 = 1
+  Definition used: 12
+    [4mpinfix1[0m (x `Cons` xs) = x : xs
+  Definition used: 4
+    pinfix1 (x `[4mCons[0m` xs) = x : xs
+  Definition used: 13
+    pinfix1 (x `Cons` xs) = [4mx[0m : xs
+  Definition used: 14
+    pinfix1 (x `Cons` xs) = x : [4mxs[0m
+  Definition used: 15
+    [4mpinfix2[0m (x : xs) = x `Cons` xs
+  Definition used: 16
+    pinfix2 (x : xs) = [4mx[0m `Cons` xs
+  Definition used: 4
+    pinfix2 (x : xs) = x `[4mCons[0m` xs
+  Definition used: 17
+    pinfix2 (x : xs) = x `Cons` [4mxs[0m
+  Definition used: 18
+    [4mpapp1[0m (Cons x xs) = x : xs
+  Definition used: 4
+    papp1 ([4mCons[0m x xs) = x : xs
+  Definition used: 19
+    papp1 (Cons x xs) = [4mx[0m : xs
+  Definition used: 20
+    papp1 (Cons x xs) = x : [4mxs[0m
+  Definition used: 21
+    [4mpapp2[0m ((:) x xs) = x : xs
+  Definition used: 22
+    papp2 ((:) x xs) = [4mx[0m : xs
+  Definition used: 23
+    papp2 ((:) x xs) = x : [4mxs[0m
+  Definition used: 24
+    [4mptuple[0m (a,b,c) = [a,b,c]
+  Definition used: 25
+    ptuple (a,b,c) = [[4ma[0m,b,c]
+  Definition used: 26
+    ptuple (a,b,c) = [a,[4mb[0m,c]
+  Definition used: 27
+    ptuple (a,b,c) = [a,b,[4mc[0m]
+  Definition used: 28
+    [4mplist[0m [a,b,c] = (a,b,c)
+  Definition used: 29
+    plist [a,b,c] = ([4ma[0m,b,c)
+  Definition used: 30
+    plist [a,b,c] = (a,[4mb[0m,c)
+  Definition used: 31
+    plist [a,b,c] = (a,b,[4mc[0m)
+  Definition used: 32
+    [4mpparen[0m ([a,b,c]) = (a,b,c)
+  Definition used: 33
+    pparen ([a,b,c]) = ([4ma[0m,b,c)
+  Definition used: 34
+    pparen ([a,b,c]) = (a,[4mb[0m,c)
+  Definition used: 35
+    pparen ([a,b,c]) = (a,b,[4mc[0m)
+  Definition used: 36
+    [4mprec[0m Field{field1=f} = f
+  Definition used: 6
+    prec [4mField[0m{field1=f} = f
+  Definition used: 7
+    prec Field{[4mfield1[0m=f} = f
+  Definition used: 37
+    prec Field{field1=f} = [4mf[0m
+  Definition used: 38
+    [4mpaspat[0m lst@(x:xs) = (lst,x,xs)
+  Definition used: 39
+    paspat lst@(x:xs) = ([4mlst[0m,x,xs)
+  Definition used: 40
+    paspat lst@(x:xs) = (lst,[4mx[0m,xs)
+  Definition used: 41
+    paspat lst@(x:xs) = (lst,x,[4mxs[0m)
+  Definition used: 42
+    [4mpwildcard[0m _ = ()
+  Definition used: 43
+    [4mpirrpat[0m ~(x:xs) = (x,xs)
+  Definition used: 44
+    pirrpat ~(x:xs) = ([4mx[0m,xs)
+  Definition used: 45
+    pirrpat ~(x:xs) = (x,[4mxs[0m)
+
+Exports:
+  Field, Data from Pat
+  List, Data from Pat
+  Cons, Constructor from Pat
+  Field, Constructor from Pat
+  Nil, Constructor from Pat
+  field1, Selector from Pat
+  field2, Selector from Pat
+  papp1, Value from Pat
+  papp2, Value from Pat
+  paspat, Value from Pat
+  pinfix1, Value from Pat
+  pinfix2, Value from Pat
+  pirrpat, Value from Pat
+  plist, Value from Pat
+  plit, Value from Pat
+  pparen, Value from Pat
+  prec, Value from Pat
+  ptuple, Value from Pat
+  pvar, Value from Pat
+  pwildcard, Value from Pat

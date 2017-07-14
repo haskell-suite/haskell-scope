@@ -375,6 +375,13 @@ resolvePat pat =
       PRec (Origin None src)
         <$> resolveQName Constructor qname
         <*> mapM resolvePatField fields
+    PAsPat src name sub ->
+      PAsPat (Origin None src)
+        <$> defineName Value name
+        <*> resolvePat sub
+    PIrrPat src sub ->
+      PIrrPat (Origin None src)
+        <$> resolvePat sub
     _ -> error $ "resolvePat: " ++ prettyPrint pat
 
 -- resolveGuardedAlts :: Resolve GuardedAlts
