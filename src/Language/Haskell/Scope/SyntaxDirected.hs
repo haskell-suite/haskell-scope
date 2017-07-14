@@ -320,6 +320,18 @@ resolveSign sign = pure $
         Signless src -> Signless (Origin None src)
         Negative src -> Negative (Origin None src)
 
+-- XXX: Should verify that the selector belongs to the constructor.
+resolvePatField :: Resolve PatField
+resolvePatField field =
+  case field of
+    PFieldPat src qname pat ->
+      PFieldPat (Origin None src)
+        <$> resolveQName Selector qname
+        <*> resolvePat pat
+    -- PFieldPun src qname ->
+    -- PFieldWildcard src ->
+    _ -> error $ "resolvePatField: " ++ prettyPrint field
+
 resolvePat :: Resolve Pat
 resolvePat pat =
   case pat of
@@ -359,6 +371,10 @@ resolvePat pat =
         <$> resolvePat a
         <*> resolveQName Constructor con
         <*> resolvePat b
+    PRec src qname fields ->
+      PRec (Origin None src)
+        <$> resolveQName Constructor qname
+        <*> mapM resolvePatField fields
     _ -> error $ "resolvePat: " ++ prettyPrint pat
 
 -- resolveGuardedAlts :: Resolve GuardedAlts

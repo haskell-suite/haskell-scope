@@ -62,6 +62,7 @@ unitTests =
   , scopeTest "BuiltIn1"
   , scopeTest "Error1"
   , scopeTest "Records1"
+  , scopeTest "Records2"
   , testGroup "Haskell2010"
     [ scopeTest "Haskell2010/Exp"
     , scopeTest "Haskell2010/ModuleNoHead"
@@ -83,8 +84,7 @@ unitTests =
     , scopeTest "Extensions/FunctionalDependencies"
     , scopeTest "Extensions/MultiParamTypeClasses" ]
   , testGroup "Known issues"
-    [ scopeTest "Instance4"
-    , scopeTest "Records2" ]
+    [ scopeTest "Instance4" ]
   ]
 
 scopeTest :: String -> Test

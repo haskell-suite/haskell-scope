@@ -1,0 +1,52 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from Records2.decl0:
+    data [4mInt[0m
+  Definition 2, from Records2.decl1:
+    data [4mRecords[0m = Records { field1 :: Int, field2 :: Int }
+  Definition 3, from Records2.decl1:
+    data Records = [4mRecords[0m { field1 :: Int, field2 :: Int }
+  Definition 4, from Records2.decl1:
+    data Records = Records { [4mfield1[0m :: Int, field2 :: Int }
+  Definition 5, from Records2.decl1:
+    data Records = Records { field1 :: Int, [4mfield2[0m :: Int }
+  Definition 6, from Records2.decl2:
+    ([4m+[0m) = (+)
+  Definition 7, from Records2.decl3:
+    [4msum Records{field1=x, field2=y} = x + y[0m
+  Definition 8, from Records2.decl3.match0:
+    sum Records{field1=[4mx[0m, field2=y} = x + y
+  Definition 9, from Records2.decl3.match0:
+    sum Records{field1=x, field2=[4my[0m} = x + y
+
+Use sites:
+  Definition used: 1
+    data Records = Records { field1 :: [4mInt[0m, field2 :: Int }
+  Definition used: 1
+    data Records = Records { field1 :: Int, field2 :: [4mInt[0m }
+  Definition used: 6
+    (+) = ([4m+[0m)
+  Definition used: 7
+    [4msum[0m Records{field1=x, field2=y} = x + y
+  Definition used: 3
+    sum [4mRecords[0m{field1=x, field2=y} = x + y
+  Definition used: 4
+    sum Records{[4mfield1[0m=x, field2=y} = x + y
+  Definition used: 5
+    sum Records{field1=x, [4mfield2[0m=y} = x + y
+  Definition used: 8
+    sum Records{field1=x, field2=y} = [4mx[0m + y
+  Definition used: 6
+    sum Records{field1=x, field2=y} = x [4m+[0m y
+  Definition used: 9
+    sum Records{field1=x, field2=y} = x + [4my[0m
+
+Exports:
+  Int, Data from Records2
+  Records, Data from Records2
+  +, Value from Records2
+  Records, Constructor from Records2
+  field1, Selector from Records2
+  field2, Selector from Records2
+  sum, Value from Records2
