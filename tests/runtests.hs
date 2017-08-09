@@ -1,6 +1,6 @@
 module Main (main) where
 
-import           Control.Monad                  (fmap, mplus, when, unless)
+import           Control.Monad                  (fmap, mplus, unless, when)
 import           Data.Foldable                  (foldMap)
 import           Data.List                      (intercalate, nub)
 import           Language.Haskell.Exts          (ParseResult (..), SrcSpan (..),
@@ -8,13 +8,14 @@ import           Language.Haskell.Exts          (ParseResult (..), SrcSpan (..),
 import           Language.Haskell.Scope
 import           System.Directory               (doesFileExist)
 import           System.Environment             (getArgs)
-import           System.Exit                    (exitSuccess, exitFailure)
-import           System.FilePath                (replaceExtension, (<.>))
+import           System.Exit                    (exitFailure, exitSuccess)
+import           System.FilePath                (replaceExtension, takeBaseName,
+                                                 (<.>))
 import           System.IO                      (hPutStrLn, stderr)
 import           Test.Framework                 (Test, defaultMain, testGroup)
 import           Test.Framework.Providers.HUnit
 import           Text.PrettyPrint.ANSI.Leijen   (Doc, indent, text, underline,
-                                                 vsep, (<>),(<$$>))
+                                                 vsep, (<$$>), (<>))
 import           Text.Printf                    (printf)
 
 main :: IO ()
@@ -90,7 +91,7 @@ unitTests =
   ]
 
 scopeTest :: String -> Test
-scopeTest name = testCase name $ do
+scopeTest name = testCase (takeBaseName name) $ do
   let testFile = name <.> "hs"
   expectedOutput <- readFile (replaceExtension testFile "stdout") `mplus` return ""
   output <- either id id `fmap` getScopeInfo testFile
