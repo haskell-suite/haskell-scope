@@ -1,0 +1,29 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from Main.decl0:
+    [4mpbang1 !x = x[0m
+  Definition 2, from Main.decl0.match0:
+    pbang1 ![4mx[0m = x
+  Definition 3, from Main.decl1:
+    [4mpbang2 (!x,!y) = [x,y][0m
+  Definition 4, from Main.decl1.match0:
+    pbang2 (![4mx[0m,!y) = [x,y]
+  Definition 5, from Main.decl1.match0:
+    pbang2 (!x,![4my[0m) = [x,y]
+
+Use sites:
+  Definition used: 1
+    [4mpbang1[0m !x = x
+  Definition used: 2
+    pbang1 !x = [4mx[0m
+  Definition used: 3
+    [4mpbang2[0m (!x,!y) = [x,y]
+  Definition used: 4
+    pbang2 (!x,!y) = [[4mx[0m,y]
+  Definition used: 5
+    pbang2 (!x,!y) = [x,[4my[0m]
+
+Exports:
+  pbang1, Value from Main
+  pbang2, Value from Main

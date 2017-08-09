@@ -382,6 +382,9 @@ resolvePat pat =
     PIrrPat src sub ->
       PIrrPat (Origin None src)
         <$> resolvePat sub
+    PBangPat src sub ->
+      PBangPat (Origin None src)
+        <$> resolvePat sub
     _ -> error $ "resolvePat: " ++ prettyPrint pat
 
 -- resolveGuardedAlts :: Resolve GuardedAlts
