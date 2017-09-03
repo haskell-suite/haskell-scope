@@ -811,32 +811,52 @@ resolveImportSpec spec =
     IVar src name ->
       IVar (Origin None src)
         <$> resolveName Value name
-    _ -> error "Language.Haskell.Scope.resolveImportSpec"
+    IAbs src ns name ->
+      IAbs (Origin None src)
+        <$> resolveNamespace ns
+        <*> resolveName Type name
+    IThingAll src name ->
+      IThingAll (Origin None src)
+        <$> resolveName Type name
+    IThingWith src name cnames ->
+      IThingWith (Origin None src)
+        <$> resolveName Type name
+        <*> mapM resolveCName cnames
 
 resolveImportSpecList :: Resolve ImportSpecList
-resolveImportSpecList (ImportSpecList src bool specs) =
-  ImportSpecList (Origin None src) bool
+resolveImportSpecList (ImportSpecList src hiding specs) =
+  ImportSpecList (Origin None src) hiding
     <$> mapM resolveImportSpec specs
 
 bindImports :: ImportDecl Origin -> Rename ()
 bindImports ImportDecl{..} = do
     iface <- getInterface modName
-    addToScope (ModuleSource importModule) "" iface
+    addToScope (ModuleSource modName) "" iface
   where
     modName = case importModule of ModuleName _ name -> name
 
+{-
+resolve spec in scope of module exports
+find imports: all OR limited OR hiding
+add to scope: qualified+non-qualified OR qualified
+
+:: ImportSpecList -> [Entity]
+-}
 resolveImportDecl :: Resolve ImportDecl
 resolveImportDecl ImportDecl{..} = do
-  decl <- ImportDecl (Origin None importAnn)
-      <$> resolveModuleName importModule
-      <*> pure importQualified
-      <*> pure importSrc
-      <*> pure importSafe
-      <*> pure importPkg
-      <*> resolveMaybe resolveModuleName importAs
-      <*> resolveMaybe resolveImportSpecList importSpecs
-  bindImports decl
-  return decl
+    iface <- getInterface modName
+    decl <- ImportDecl (Origin None importAnn)
+        <$> resolveModuleName importModule
+        <*> pure importQualified
+        <*> pure importSrc
+        <*> pure importSafe
+        <*> pure importPkg
+        <*> resolveMaybe resolveModuleName importAs
+        <*> withLimitedScope modName iface (resolveMaybe resolveImportSpecList importSpecs)
+    bindImports decl
+    return decl
+  where
+    modName = case importModule of ModuleName _ name -> name
 
 moduleHeadLocation :: Maybe (ModuleHead a) -> String
 moduleHeadLocation Nothing = "Main"

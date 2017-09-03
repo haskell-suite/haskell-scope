@@ -98,21 +98,21 @@ scopeTest name = testCase (takeBaseName name) $ do
   let isFailure = expectedOutput /= output
   when isFailure $ fail "Diff Error"
 
-loadStdlib :: IO ResolveEnv
-loadStdlib = do
-  fileContent <- readFile "Stdlib.hs"
-  parsed <- parseFile "Stdlib.hs"
+loadStdlib :: FilePath -> ResolveEnv -> IO ResolveEnv
+loadStdlib path env = do
+  fileContent <- readFile path
+  parsed <- parseFile path
   case parsed of
     ParseFailed position msg ->
       fail $ show position ++ "\n" ++ msg
     ParseOk thisModule -> do
-      let (env, errs, _scoped) = resolve emptyResolveEnv thisModule
+      let (env', errs, _scoped) = resolve env thisModule
       unless (null errs) $
         fail $ unlines $
           [ "Scope errors:" ] ++
           [ show (indent 2 $ ppScopeError err fileContent)
           | err <- errs ]
-      return env
+      return env'
 
 getScopeInfo :: FilePath -> IO (Either String String)
 getScopeInfo file = do
@@ -124,7 +124,8 @@ getScopeInfo file = do
         show position ++ "\n" ++
         msg
     ParseOk thisModule -> do
-      initEnv <- loadStdlib
+      initEnv <- loadStdlib "Otherlib.hs" =<<
+                 loadStdlib "Stdlib.hs" emptyResolveEnv
       let (env, errs, scoped) = resolve initEnv thisModule
           allResolved = foldMap getResolved scoped
           getResolved (Origin (Resolved gname) loc) = [(loc, gname)]
