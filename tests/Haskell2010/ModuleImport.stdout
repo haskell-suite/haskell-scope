@@ -6,9 +6,15 @@ Definitions:
 
 Use sites:
   Definition used: Stdlib.decl1
-    import Stdlib ([4mInt[0m)
+    import Stdlib ([4mInt[0m, fromJust)
+  Definition used: Stdlib.decl6
+    import Stdlib (Int, [4mfromJust[0m)
   Definition used: Stdlib.decl2
-    import Stdlib ([4mMaybe[0m(..))
+    import Stdlib ([4mMaybe[0m(..), Bool(True))
+  Definition used: Stdlib.decl3
+    import Stdlib (Maybe(..), [4mBool[0m(True))
+  Definition used: Stdlib.decl3
+    import Stdlib (Maybe(..), Bool([4mTrue[0m))
   Definition used: Stdlib.decl1
     type MyInt = [4mInt[0m
 
