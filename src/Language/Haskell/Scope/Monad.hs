@@ -118,7 +118,7 @@ type Interface = [Entity]
 data Source
     = ImplicitSource -- Imported implicitly, usually from Prelude.
     | LocalSource -- Not imported, defined locally.
-    | ModuleSource (ModuleName Origin) -- FIXME: Change to String
+    | ModuleSource String -- Module name
     deriving ( Eq, Ord, Show )
 
 data ScopedName = ScopedName Source Entity
@@ -300,8 +300,25 @@ addToScope src modName iface =
             , let ident = entityNameIdentifier entity]
         } []
 
-withLimitedScope :: Interface -> Rename a -> Rename a
-withLimitedScope = undefined
+withLimitedScope :: String -> Interface -> Rename a -> Rename a
+withLimitedScope modName iface =
+  local $ \env ->
+    env{ readerScope =
+            emptyScope
+                { scopeTypes = Map.fromList
+                    [ (QualifiedName "" ident, [ScopedName src entity])
+                    | entity <- iface
+                    , entityNamespace entity == NsTypes
+                    , let ident = entityNameIdentifier entity ]
+                , scopeValues = Map.fromList
+                    [ (QualifiedName "" ident, [ScopedName src entity])
+                    | entity <- iface
+                    , entityNamespace entity == NsValues
+                    , let ident = entityNameIdentifier entity]
+                }
+       }
+  where
+   src = ModuleSource modName
 
 -- Run action without letting the tyVars escsape the scope.
 limitTyVarScope :: String -> Rename a -> Rename a
