@@ -811,7 +811,15 @@ resolveImportSpec spec =
     IVar src name ->
       IVar (Origin None src)
         <$> resolveName Value name
-    _ -> error "Language.Haskell.Scope.resolveImportSpec"
+    IAbs src ns name ->
+      IAbs (Origin None src) <$> resolveNamespace ns <*> resolveName Type name
+    IThingAll src name ->
+      IThingAll (Origin None src) <$> resolveName Type name
+    IThingWith src name cnames ->
+      IThingWith (Origin None src)
+        <$> resolveName Type name
+        <*> mapM resolveCName cnames
+    -- _ -> error "Language.Haskell.Scope.resolveImportSpec"
 
 resolveImportSpecList :: Resolve ImportSpecList
 resolveImportSpecList (ImportSpecList src bool specs) =

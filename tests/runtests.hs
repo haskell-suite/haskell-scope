@@ -71,6 +71,8 @@ unitTests =
     , scopeTest "Haskell2010/ModuleNoHead"
     , scopeTest "Haskell2010/ModuleNoExports"
     , scopeTest "Haskell2010/ModuleExports"
+    , scopeTest "Haskell2010/ModuleImport"
+    -- , scopeTest "Haskell2010/ModuleImportAs"
     , scopeTest "Haskell2010/DeclDataDecl"
     , scopeTest "Haskell2010/DeclInstDecl"
     , scopeTest "Haskell2010/DeclDefaultDecl"

@@ -5,6 +5,7 @@ import           Control.Monad.Identity
 import           Control.Monad.Reader
 import           Control.Monad.Writer         (MonadWriter, Writer,
                                                WriterT (..), runWriter, tell)
+import           Data.List                    (nub, nubBy)
 import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Monoid                  (Monoid (..))
@@ -33,7 +34,7 @@ getModuleName :: Module a -> String
 getModuleName m =
   case m of
     Module _ (Just (ModuleHead _ (ModuleName _ name) _ _)) _ _ _ -> name
-    _   -> "Main"
+    _                                                            -> "Main"
 
 
 -----------------------------------------------------------
@@ -78,19 +79,19 @@ data EntityKind
 entityKindNamespace :: EntityKind -> RNamespace
 entityKindNamespace eKind =
   case eKind of
-    Value -> NsValues
-    Method -> NsValues
-    Selector -> NsValues
-    Constructor -> NsValues
-    Type -> NsTypes
-    TypeVariable -> NsTypeVariables
-    Data -> NsTypes
-    NewType -> NsTypes
-    TypeFamily -> NsTypes
-    DataFamily -> NsTypes
-    Class -> NsTypes
+    Value              -> NsValues
+    Method             -> NsValues
+    Selector           -> NsValues
+    Constructor        -> NsValues
+    Type               -> NsTypes
+    TypeVariable       -> NsTypeVariables
+    Data               -> NsTypes
+    NewType            -> NsTypes
+    TypeFamily         -> NsTypes
+    DataFamily         -> NsTypes
+    Class              -> NsTypes
     PatternConstructor -> NsTypes
-    PatternSelector -> NsTypes
+    PatternSelector    -> NsTypes
 
 type Location = [String]
 
@@ -158,9 +159,9 @@ localEntities (Scope tys tyvars values) =
       Map.elems tyvars ++
       Map.elems values
   where
-    getLocals [] = []
+    getLocals []                                 = []
     getLocals (ScopedName LocalSource entity:xs) = entity:getLocals xs
-    getLocals (_:xs) = getLocals xs
+    getLocals (_:xs)                             = getLocals xs
 
 -- Bah, come up with a better name than 'Out'
 data Out = Out Scope [ScopeError]
@@ -175,13 +176,19 @@ instance Monoid Out where
         , scopeValues     = Map.unionWithKey check (scopeValues a) (scopeValues b) }
         (conflictingValues ++ conflictingTypes ++ aerrs ++ berrs)
       where
-        check _k a' b' = a' ++ b'
+        check _k a' b' = nubBy (\a b -> getEntity a == getEntity b) (a' ++ b')
         conflictingTypes =
           [ EConflicting dups
-          | dups <- Map.elems (Map.intersectionWith (++) (scopeTypes a) (scopeTypes b)) ]
+          | dups <- Map.elems (Map.intersectionWith (++) (scopeTypes a) (scopeTypes b))
+          , not (null $ drop 1 $ nub $ map getEntity dups) ]
         conflictingValues =
           [ EConflicting dups
-          | dups <- Map.elems (Map.intersectionWith (++) (scopeValues a) (scopeValues b)) ]
+          | dups <- Map.elems (Map.intersectionWith (++) (scopeValues a) (scopeValues b))
+          , not (null $ drop 1 $ nub $ map getEntity dups) ]
+
+getEntity :: ScopedName -> Entity
+getEntity (ScopedName _ e) = e
+
 
 -- Join two scopes, names in the first scope will shadow names in the second.
 shadowJoin :: Scope -> Scope -> Scope
@@ -350,11 +357,11 @@ restrictScope qname scopedName =
     in env{readerScope = s'}
 
 getNameIdentifier :: Name l -> String
-getNameIdentifier (Ident _ ident) = ident
+getNameIdentifier (Ident _ ident)   = ident
 getNameIdentifier (Symbol _ symbol) = symbol
 
 matchName :: Match l -> Name l
-matchName (Match _span name _pats _rhs _binds) = name
+matchName (Match _span name _pats _rhs _binds)             = name
 matchName (InfixMatch _span _left name _right _rhs _binds) = name
 
 qnameToEntity :: QName Origin -> Maybe Entity
@@ -367,7 +374,7 @@ qnameToEntity qname =
     expectResolved :: Origin -> Maybe Entity
     expectResolved (Origin (Resolved entity) _) = Just entity
     -- expectResolved (Origin (Binding entity) _) = Just entity
-    expectResolved _ = Nothing
+    expectResolved _                            = Nothing
 
 nameToEntity :: Name Origin -> Maybe Entity
 nameToEntity name = expectResolved (ann name)
@@ -375,4 +382,4 @@ nameToEntity name = expectResolved (ann name)
     expectResolved :: Origin -> Maybe Entity
     expectResolved (Origin (Resolved entity) _) = Just entity
     -- expectResolved (Origin (Binding entity) _) = Just entity
-    expectResolved _ = Nothing
+    expectResolved _                            = Nothing

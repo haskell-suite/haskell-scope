@@ -1,0 +1,16 @@
+Scope errors:
+
+Definitions:
+  Definition 1, from ModuleImport.decl0:
+    type [4mMyInt[0m = Int
+
+Use sites:
+  Definition used: Stdlib.decl1
+    import Stdlib ([4mInt[0m)
+  Definition used: Stdlib.decl2
+    import Stdlib ([4mMaybe[0m(..))
+  Definition used: Stdlib.decl1
+    type MyInt = [4mInt[0m
+
+Exports:
+  MyInt, Type from ModuleImport
