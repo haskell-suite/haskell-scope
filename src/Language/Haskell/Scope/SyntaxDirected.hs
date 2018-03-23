@@ -842,9 +842,12 @@ add to scope: qualified+non-qualified OR qualified
 
 :: ImportSpecList -> [Entity]
 -}
+-- fn :: Interface -> Maybe (ImportSpecList Origin) -> Interface
+
 resolveImportDecl :: Resolve ImportDecl
 resolveImportDecl ImportDecl{..} = do
     iface <- getInterface modName
+    mbSpecList <- withLimitedScope modName iface (resolveMaybe resolveImportSpecList importSpecs)
     decl <- ImportDecl (Origin None importAnn)
         <$> resolveModuleName importModule
         <*> pure importQualified
@@ -852,7 +855,7 @@ resolveImportDecl ImportDecl{..} = do
         <*> pure importSafe
         <*> pure importPkg
         <*> resolveMaybe resolveModuleName importAs
-        <*> withLimitedScope modName iface (resolveMaybe resolveImportSpecList importSpecs)
+        <*> pure mbSpecList
     bindImports decl
     return decl
   where

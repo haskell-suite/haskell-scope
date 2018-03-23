@@ -67,7 +67,7 @@ data EntityKind
   | Constructor
   | Type
   | TypeVariable
-  | Data
+  | Data -- [Entity]
   | NewType
   | TypeFamily
   | DataFamily
