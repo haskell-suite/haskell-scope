@@ -870,6 +870,7 @@ resolveModule :: Resolve Module
 resolveModule m =
   case m of
     Module src mhead pragma imports decls ->
+      setModuleName (moduleHeadLocation mhead) $
       pushLocation (moduleHeadLocation mhead) $
       Module (Origin None src)
           <$> resolveMaybe resolveModuleHead mhead

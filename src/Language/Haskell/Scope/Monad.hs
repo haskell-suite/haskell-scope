@@ -229,6 +229,9 @@ runRename resolveEnv action = (scope, errs, a)
       , readerModuleName = ""
       , readerContext    = ResolveToplevel }
 
+setModuleName :: String -> Rename a -> Rename a
+setModuleName name = local (\env -> env{ readerModuleName = name })
+
 tellScopeErrors :: [ScopeError] -> Rename ()
 tellScopeErrors errs = tell $ Out emptyScope errs
 
