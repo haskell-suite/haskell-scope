@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE LambdaCase #-}
 module Language.Haskell.Scope.SyntaxDirected
     ( resolveModule
     ) where
@@ -224,10 +225,18 @@ resolveInstRule instRule =
             IParen (Origin None src) <$> resolveInstRule subRule
         -- _ -> error "resolveInstRule"
 
+resolveDerivStrategy :: Resolve DerivStrategy
+resolveDerivStrategy = pure .
+  \case
+    DerivStock src -> DerivStock (Origin None src)
+    DerivAnyclass src -> DerivAnyclass (Origin None src)
+    DerivNewtype src -> DerivNewtype (Origin None src)
+
 resolveDeriving :: Resolve Deriving
-resolveDeriving (Deriving src instRules) =
+resolveDeriving (Deriving src mbStrat instRules) =
     Deriving
         <$> pure (Origin None src)
+        <*> resolveMaybe resolveDerivStrategy mbStrat
         <*> mapM resolveInstRule instRules
 
 resolveSpecialCon :: Resolve SpecialCon
@@ -239,6 +248,12 @@ resolveSpecialCon specialCon = pure $
         TupleCon src boxed size -> TupleCon (Origin None src) boxed size
         Cons src                -> Cons $ Origin None src
         UnboxedSingleCon src    -> UnboxedSingleCon $ Origin None src
+
+resolveMaybePromotedName :: Resolve MaybePromotedName
+resolveMaybePromotedName =
+  \case
+    PromotedName src qname -> PromotedName (Origin None src) <$> resolveQName Type qname
+    UnpromotedName src qname -> UnpromotedName (Origin None src) <$> resolveQName Type qname
 
 resolveType :: Resolve Type
 resolveType ty =
@@ -263,7 +278,7 @@ resolveType ty =
     TyInfix src l qname r ->
       TyInfix (Origin None src)
         <$> resolveType l
-        <*> resolveQName Type qname
+        <*> resolveMaybePromotedName qname
         <*> resolveType r
     TyTuple src boxed tys ->
       TyTuple (Origin None src) boxed
@@ -658,7 +673,7 @@ resolveDecl decl = do
           <*> resolveMaybe resolveContext ctx
           <*> resolveDeclHead Data dhead
           <*> mapM resolveQualConDecl cons
-          <*> resolveMaybe resolveDeriving derive
+          <*> mapM resolveDeriving derive
     FunBind src matches -> localContext ResolveToplevel $ do
       -- We use the bind site to uniquely identify
       -- top-level functions. For class declarations,
