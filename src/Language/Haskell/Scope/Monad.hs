@@ -1,6 +1,11 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 module Language.Haskell.Scope.Monad where
 
+import Data.Data
+import GHC.Generics
 import           Control.Monad.Identity
 import           Control.Monad.Reader
 import           Control.Monad.Writer         (MonadWriter, Writer,
@@ -9,7 +14,7 @@ import           Data.List                    (nub, nubBy)
 import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Monoid                  (Monoid (..))
-import           Language.Haskell.Exts.SrcLoc (SrcSpanInfo (..), noSrcSpan)
+import           Language.Haskell.Exts.SrcLoc (SrcSpanInfo (..), SrcSpan(..), noSrcSpan)
 import           Language.Haskell.Exts.Syntax hiding (NewType)
 
 -- ModuleName -> Interface
@@ -41,21 +46,21 @@ getModuleName m =
 -- Types and Monad
 
 data Origin = Origin NameInfo SrcSpanInfo
-    deriving ( Eq, Ord, Show )
+    deriving ( Eq, Ord, Show, Data, Generic )
 
 data NameInfo
     = Resolved Entity
     | Binding Entity
     | None
     | ScopeError ScopeError
-    deriving ( Show, Eq, Ord )
+    deriving ( Show, Eq, Ord, Data, Generic )
 
 data Entity = Entity
   { entityLocation :: Location
   , entitySrcSpan  :: SrcSpanInfo
   , entityName     :: QualifiedName
   , entityKind     :: EntityKind
-  } deriving ( Show, Eq, Ord )
+  } deriving ( Show, Eq, Ord, Data, Generic )
 
 entityNamespace :: Entity -> RNamespace
 entityNamespace = entityKindNamespace . entityKind
@@ -74,7 +79,7 @@ data EntityKind
   | Class
   | PatternConstructor
   | PatternSelector
-    deriving ( Show, Eq, Ord )
+    deriving ( Show, Eq, Ord, Data, Generic )
 
 entityKindNamespace :: EntityKind -> RNamespace
 entityKindNamespace eKind =
@@ -101,7 +106,7 @@ type Location = [String]
 data QualifiedName = QualifiedName
     { qnameModule     :: String
     , qnameIdentifier :: String }
-    deriving ( Eq, Ord, Show )
+    deriving ( Eq, Ord, Show, Data, Generic )
 
 -- globalNameSrcSpanInfo :: GlobalName -> SrcSpanInfo
 -- globalNameSrcSpanInfo (GlobalName _ src _) = src
@@ -119,10 +124,10 @@ data Source
     = ImplicitSource -- Imported implicitly, usually from Prelude.
     | LocalSource -- Not imported, defined locally.
     | ModuleSource String -- Module name
-    deriving ( Eq, Ord, Show )
+    deriving ( Eq, Ord, Show, Data, Generic )
 
 data ScopedName = ScopedName Source Entity
-    deriving ( Eq, Ord, Show )
+    deriving ( Eq, Ord, Show, Data, Generic )
 
 data ScopeError
     = ENotInScope SrcSpanInfo QualifiedName EntityKind
@@ -132,12 +137,12 @@ data ScopeError
     | ENotExported
     | EModNotFound
     | EInternal
-    deriving ( Eq, Ord, Show )
+    deriving ( Eq, Ord, Show, Data, Generic )
 data RNamespace
     = NsTypes
     | NsTypeVariables
     | NsValues
-    deriving ( Eq, Ord, Show )
+    deriving ( Eq, Ord, Show, Data, Generic )
 data Scope = Scope
     { scopeTypes  :: Map QualifiedName [ScopedName]
     -- XXX: limitTyVarScope requires tyvars to be separate from types.
