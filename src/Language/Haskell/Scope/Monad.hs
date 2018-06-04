@@ -170,26 +170,28 @@ localEntities (Scope tys tyvars values) =
 
 -- Bah, come up with a better name than 'Out'
 data Out = Out Scope [ScopeError]
+instance Semigroup Out where
+  Out a aerrs <> Out b berrs = Out Scope
+      { scopeTypes      = Map.unionWithKey check (scopeTypes a) (scopeTypes b)
+      , scopeTyVars     = Map.unionWithKey check (scopeTyVars a) (scopeTyVars b)
+      , scopeValues     = Map.unionWithKey check (scopeValues a) (scopeValues b) }
+      (conflictingValues ++ conflictingTypes ++ aerrs ++ berrs)
+    where
+      check _k a' b' = nubBy (\a b -> getEntity a == getEntity b) (a' ++ b')
+      conflictingTypes =
+        [ EConflicting dups
+        | dups <- Map.elems (Map.intersectionWith (++) (scopeTypes a) (scopeTypes b))
+        , not (null $ drop 1 $ nub $ map getEntity dups) ]
+      conflictingValues =
+        [ EConflicting dups
+        | dups <- Map.elems (Map.intersectionWith (++) (scopeValues a) (scopeValues b))
+        , not (null $ drop 1 $ nub $ map getEntity dups) ]
+
 instance Monoid Out where
     mempty = Out Scope
         { scopeTypes        = Map.empty
         , scopeTyVars       = Map.empty
         , scopeValues       = Map.empty} []
-    mappend (Out a aerrs) (Out b berrs) = Out Scope
-        { scopeTypes      = Map.unionWithKey check (scopeTypes a) (scopeTypes b)
-        , scopeTyVars     = Map.unionWithKey check (scopeTyVars a) (scopeTyVars b)
-        , scopeValues     = Map.unionWithKey check (scopeValues a) (scopeValues b) }
-        (conflictingValues ++ conflictingTypes ++ aerrs ++ berrs)
-      where
-        check _k a' b' = nubBy (\a b -> getEntity a == getEntity b) (a' ++ b')
-        conflictingTypes =
-          [ EConflicting dups
-          | dups <- Map.elems (Map.intersectionWith (++) (scopeTypes a) (scopeTypes b))
-          , not (null $ drop 1 $ nub $ map getEntity dups) ]
-        conflictingValues =
-          [ EConflicting dups
-          | dups <- Map.elems (Map.intersectionWith (++) (scopeValues a) (scopeValues b))
-          , not (null $ drop 1 $ nub $ map getEntity dups) ]
 
 getEntity :: ScopedName -> Entity
 getEntity (ScopedName _ e) = e
