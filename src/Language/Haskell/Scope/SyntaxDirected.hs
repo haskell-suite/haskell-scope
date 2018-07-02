@@ -472,16 +472,19 @@ resolveStmt :: Resolve Stmt
 resolveStmt stmt =
   case stmt of
     Generator src pat expr ->
-      Generator (Origin None src)
+      Generator (Origin (Resolved bindIOEntity) src)
                 <$> resolvePat pat
                 <*> limitScope "gen" (resolveExp expr)
     Qualifier src expr ->
-      Qualifier (Origin None src)
+      Qualifier (Origin (Resolved thenIOEntity) src)
                 <$> limitScope "qual" (resolveExp expr)
     LetStmt src binds -> recursiveScope $
       LetStmt (Origin None src)
                 <$> resolveBinds binds
     _ -> error $ "resolveStmt: " ++ prettyPrint stmt
+  where
+    bindIOEntity = Entity [] noSrcSpan (QualifiedName "LHC.Prim" "bindIO") Value
+    thenIOEntity = Entity [] noSrcSpan (QualifiedName "LHC.Prim" "thenIO") Value
 
 resolveFieldUpdate :: Resolve FieldUpdate
 resolveFieldUpdate upd =
