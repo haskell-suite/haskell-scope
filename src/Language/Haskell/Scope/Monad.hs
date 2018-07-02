@@ -1,20 +1,22 @@
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE StandaloneDeriving         #-}
 module Language.Haskell.Scope.Monad where
 
-import Data.Data
-import GHC.Generics
 import           Control.Monad.Identity
 import           Control.Monad.Reader
 import           Control.Monad.Writer         (MonadWriter, Writer,
                                                WriterT (..), runWriter, tell)
+import           Data.Data
 import           Data.List                    (nub, nubBy)
 import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Monoid                  (Monoid (..))
-import           Language.Haskell.Exts.SrcLoc (SrcSpanInfo (..), SrcSpan(..), noSrcSpan)
+import           Data.Semigroup               (Semigroup (..))
+import           GHC.Generics
+import           Language.Haskell.Exts.SrcLoc (SrcSpan (..), SrcSpanInfo (..),
+                                               noSrcSpan)
 import           Language.Haskell.Exts.Syntax hiding (NewType)
 
 -- ModuleName -> Interface
