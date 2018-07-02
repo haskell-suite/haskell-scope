@@ -194,6 +194,7 @@ instance Monoid Out where
         { scopeTypes        = Map.empty
         , scopeTyVars       = Map.empty
         , scopeValues       = Map.empty} []
+    mappend = (<>)
 
 getEntity :: ScopedName -> Entity
 getEntity (ScopedName _ e) = e
