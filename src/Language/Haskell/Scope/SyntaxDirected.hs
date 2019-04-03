@@ -133,10 +133,7 @@ resolveCallConv :: Resolve CallConv
 resolveCallConv = pure . fmap (Origin None)
 
 resolveKind :: Resolve Kind
-resolveKind kind =
-    case kind of
-        KindStar src -> pure $ KindStar (Origin None src)
-        _ -> error "resolveKind"
+resolveKind = resolveType
 
 resolveTyVarBind :: Resolve TyVarBind
 resolveTyVarBind tyVarBind =
