@@ -1,45 +1,43 @@
 Scope errors:
 
 Definitions:
-  Definition 1:
-    class [4mShow[0m
-  Definition 2:
+  Definition 1, from Types2.decl0:
+    class [4mShow[0m a
+  Definition 2, from Types2.decl0:
+    class Show [4ma[0m
+  Definition 3, from Types2.decl2:
     [4mx[0m = x
-  Definition 3:
-    [4mx :: a[0m
-  Definition 4:
-    [4my[0m = y
-  Definition 5:
+  Definition 4, from Types2.decl3:
     y :: forall [4ma[0m. a
-  Definition 6:
+  Definition 5, from Types2.decl4:
+    [4my[0m = y
+  Definition 6, from Types2.decl6:
     [4mz[0m = z
-  Definition 7:
-    [4mz :: Show a => a[0m
-  Definition 8:
-    [4mq[0m = q
-  Definition 9:
+  Definition 7, from Types2.decl7:
     q :: forall [4ma[0m. Show a => a
+  Definition 8, from Types2.decl8:
+    [4mq[0m = q
 
 Use sites:
-  Definition used: 2
-    [4mx[0m :: a
   Definition used: 3
+    [4mx[0m :: a
+  Definition used: Types2.decl1.tv
     x :: [4ma[0m
-  Definition used: 2
+  Definition used: 3
     x = [4mx[0m
-  Definition used: 4
-    [4my[0m :: forall a. a
   Definition used: 5
-    y :: forall a. [4ma[0m
+    [4my[0m :: forall a. a
   Definition used: 4
+    y :: forall a. [4ma[0m
+  Definition used: 5
     y = [4my[0m
   Definition used: 6
     [4mz[0m :: Show a => a
   Definition used: 1
     z :: [4mShow[0m a => a
-  Definition used: 7
+  Definition used: Types2.decl5.tv
     z :: Show [4ma[0m => a
-  Definition used: 7
+  Definition used: Types2.decl5.tv
     z :: Show a => [4ma[0m
   Definition used: 6
     z = [4mz[0m
@@ -47,9 +45,16 @@ Use sites:
     [4mq[0m :: forall a. Show a => a
   Definition used: 1
     q :: forall a. [4mShow[0m a => a
-  Definition used: 9
+  Definition used: 7
     q :: forall a. Show [4ma[0m => a
-  Definition used: 9
+  Definition used: 7
     q :: forall a. Show a => [4ma[0m
   Definition used: 8
     q = [4mq[0m
+
+Exports:
+  Show, Class from Types2
+  q, Value from Types2
+  x, Value from Types2
+  y, Value from Types2
+  z, Value from Types2

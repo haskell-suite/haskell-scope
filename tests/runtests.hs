@@ -1,22 +1,26 @@
 module Main (main) where
 
-import           Control.Monad                  (fmap, mplus, unless, when)
-import           Data.Foldable                  (foldMap)
-import           Data.List                      (intercalate, nub)
-import           Language.Haskell.Exts          (ParseResult (..), SrcSpan (..),
-                                                 SrcSpanInfo (..), parseFile)
+import           Control.Monad                (fmap, unless, when)
+import qualified Data.ByteString.Lazy         as BL
+import           Data.Foldable                (foldMap)
+import           Data.List                    (intercalate, sort)
+import qualified Data.Text                    as T
+import qualified Data.Text.Encoding           as T
+import           Language.Haskell.Exts        (ParseResult (..), SrcSpan (..),
+                                               SrcSpanInfo (..), parseFile)
 import           Language.Haskell.Scope
-import           System.Directory               (doesFileExist)
-import           System.Environment             (getArgs)
-import           System.Exit                    (exitFailure, exitSuccess)
-import           System.FilePath                (replaceExtension, takeBaseName,
-                                                 (<.>))
-import           System.IO                      (hPutStrLn, stderr)
-import           Test.Framework                 (Test, defaultMain, testGroup)
-import           Test.Framework.Providers.HUnit
-import           Text.PrettyPrint.ANSI.Leijen   (Doc, indent, text, underline,
-                                                 vsep, (<$$>), (<>))
-import           Text.Printf                    (printf)
+import           System.Directory             (doesFileExist)
+import           System.Environment           (getArgs)
+import           System.Exit                  (exitFailure, exitSuccess)
+import           System.FilePath              (replaceExtension, takeBaseName)
+import           System.IO                    (hPutStrLn, stderr)
+import           Text.PrettyPrint.ANSI.Leijen (Doc, indent, text, underline,
+                                               vsep, (<$$>), (<>))
+import           Text.Printf                  (printf)
+
+import           Test.Tasty
+import           Test.Tasty.ExpectedFailure
+import           Test.Tasty.Golden
 
 main :: IO ()
 main = do
@@ -28,78 +32,25 @@ main = do
         info <- getScopeInfo path
         case info of
           Left err -> do
-            hPutStrLn stderr err
+            putStr err
+            hPutStrLn stderr ""
             exitFailure
           Right msg -> do
             putStr msg
             exitSuccess
     _ -> return ()
-  defaultMain unitTests
-
-unitTests :: [Test]
-unitTests =
-  [ scopeTest "Basic"
-  , scopeTest "Class1"
-  , scopeTest "Class2"
-  , scopeTest "Class3"
-  , scopeTest "Instance1"
-  , scopeTest "Instance2"
-  , scopeTest "Instance3"
-
-  , scopeTest "Shadowing1"
-  , scopeTest "Shadowing2"
-  , scopeTest "Shadowing3"
-  , scopeTest "Shadowing4"
-  , scopeTest "Shadowing5"
-  , scopeTest "DataType1"
-  , scopeTest "Types1"
-  , scopeTest "Where1"
-  , scopeTest "Where2"
-  , scopeTest "Where3"
-  , scopeTest "Where4"
-  , scopeTest "Where5"
-  , scopeTest "Where6"
-  , scopeTest "Infix1"
-  , scopeTest "BuiltIn1"
-  , scopeTest "Error1"
-  , scopeTest "Records1"
-  , scopeTest "Records2"
-  , testGroup "Haskell2010"
-    [ scopeTest "Haskell2010/Exp"
-    , scopeTest "Haskell2010/Pat"
-    , scopeTest "Haskell2010/Type"
-    , scopeTest "Haskell2010/ModuleNoHead"
-    , scopeTest "Haskell2010/ModuleNoExports"
-    , scopeTest "Haskell2010/ModuleExports"
-    , scopeTest "Haskell2010/ModuleImport"
-    , scopeTest "Haskell2010/ModuleImportDuplicate"
-    -- , scopeTest "Haskell2010/ModuleImportAs"
-    , scopeTest "Haskell2010/DeclDataDecl"
-    , scopeTest "Haskell2010/DeclInstDecl"
-    , scopeTest "Haskell2010/DeclDefaultDecl"
-    , scopeTest "Haskell2010/DeclForImp"
-    , scopeTest "Haskell2010/DeclFunBind"
-    , scopeTest "Haskell2010/DeclPatBind"
-    , scopeTest "Haskell2010/DeclTypeDecl"
-    , scopeTest "Haskell2010/DeclTypeSig"
-    , scopeTest "Haskell2010/DeclInfixDecl"
+  goldenFiles <- sort <$> findByExtension [".stdout"] "tests"
+  defaultMain $ testGroup "Tests"
+    [ (if testName `elem` ignoreList
+        then ignoreTest
+        else id)
+      (goldenVsText testName goldenFile (getScopeInfo' testFile))
+    | goldenFile <- goldenFiles
+    , let testFile = replaceExtension goldenFile "hs"
+    , let testName = takeBaseName goldenFile
     ]
-  , testGroup "Extensions"
-    [ scopeTest "Extensions/MagicHash"
-    , scopeTest "Extensions/FunctionalDependencies"
-    , scopeTest "Extensions/MultiParamTypeClasses"
-    , scopeTest "Extensions/BangPatterns" ]
-  , testGroup "Known issues"
-    [ scopeTest "Instance4" ]
-  ]
-
-scopeTest :: String -> Test
-scopeTest name = testCase (takeBaseName name) $ do
-  let testFile = name <.> "hs"
-  expectedOutput <- readFile (replaceExtension testFile "stdout") `mplus` return ""
-  output <- either id id `fmap` getScopeInfo testFile
-  let isFailure = expectedOutput /= output
-  when isFailure $ fail "Diff Error"
+  where
+    ignoreList = []
 
 loadStdlib :: FilePath -> ResolveEnv -> IO ResolveEnv
 loadStdlib path env = do
@@ -117,6 +68,9 @@ loadStdlib path env = do
           | err <- errs ]
       return env'
 
+getScopeInfo' :: FilePath -> IO String
+getScopeInfo' path = fmap (either id id) (getScopeInfo path)
+
 getScopeInfo :: FilePath -> IO (Either String String)
 getScopeInfo file = do
   fileContent <- readFile file
@@ -127,15 +81,15 @@ getScopeInfo file = do
         show position ++ "\n" ++
         msg
     ParseOk thisModule -> do
-      initEnv <- loadStdlib "Otherlib.hs" =<<
-                 loadStdlib "Stdlib.hs" emptyResolveEnv
+      initEnv <- loadStdlib "tests/Otherlib.hs" =<<
+                 loadStdlib "tests/Stdlib.hs" emptyResolveEnv
       let (env, errs, scoped) = resolve initEnv thisModule
           allResolved = foldMap getResolved scoped
           getResolved (Origin (Resolved gname) loc) = [(loc, gname)]
-          getResolved _ = []
+          getResolved _                             = []
           bindings = foldMap getBinding scoped
           getBinding (Origin (Binding gname) loc) = [(loc, gname)]
-          getBinding _ = []
+          getBinding _                            = []
           defIndex = zip (map snd bindings) [1::Int ..]
           Just iface = lookupInterface (getModuleName thisModule) env
       return $ Right $ unlines $
@@ -151,7 +105,7 @@ getScopeInfo file = do
         concat
         [ [ printf "  Definition used: %s" (maybe (intercalate "." $ reverse pos) show (lookup entity defIndex))
           , show $ ppLocation 4 fileContent usageLoc ]
-        | (usageLoc, entity@(Entity pos _src _ _) ) <- allResolved ] ++
+        | (usageLoc, entity@(Entity pos _src _name _) ) <- allResolved ] ++
         [ "", "Exports:" ] ++
         [ "  " ++ ppEntity entity
         | entity <- iface
@@ -203,3 +157,9 @@ ppLocation padding file srcSpanInfo =
     beginColumn = srcSpanStartColumn srcSpan
     endLine = srcSpanEndLine srcSpan
     endColumn = srcSpanEndColumn srcSpan
+
+goldenVsText :: TestName -> FilePath -> IO String -> TestTree
+goldenVsText name path gen =
+    goldenVsStringDiff name (\ref new -> ["diff", ref, new]) path gen'
+  where
+    gen' = BL.fromStrict . T.encodeUtf8 . T.pack <$> gen

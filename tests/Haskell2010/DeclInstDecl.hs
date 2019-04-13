@@ -1,4 +1,4 @@
-{-# LANGUAGE Haskell2010 #-}
+{-# LANGUAGE Haskell2010, MultiParamTypeClasses #-}
 module DeclInstDecl where
 
 class Class0

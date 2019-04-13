@@ -1,7 +1,7 @@
 {-# LANGUAGE ExplicitForAll #-}
 module Types2 where
 
-class Show
+class Show a
 
 x :: a
 x = x

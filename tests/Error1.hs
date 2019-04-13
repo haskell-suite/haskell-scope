@@ -17,8 +17,8 @@ data X -- #2
 type Y = X
 
 -- Conflicting type classes
-class C
-class C
+class C a
+class C b
 
 -- Conflicting nested pattern
 (z,z) = ()
