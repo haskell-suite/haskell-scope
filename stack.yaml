@@ -1,0 +1,9 @@
+resolver: lts-12.26
+
+allow-newer: false
+
+packages:
+- '.'
+
+extra-deps:
+- haskell-src-exts-1.21.0
