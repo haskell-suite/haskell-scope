@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/haskell-suite/haskell-scope.svg?branch=master)](https://travis-ci.org/haskell-suite/haskell-scope)
+
 Name resolution written in plain Haskell.
 
 This library is much less mature than <https://github.com/haskell-suite/haskell-names>.
